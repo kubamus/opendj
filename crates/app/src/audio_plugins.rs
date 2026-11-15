@@ -289,9 +289,16 @@ impl AudioPlugins {
     /// The ticked effects that are still there, in the FX lists' order.
     fn chosen(&self) -> Vec<Found> {
         let shown = self.shown();
-        self.effects()
+        let chosen: Vec<_> = self
+            .effects()
             .into_iter()
             .filter(|f| shown.contains(&f.key))
+            .collect();
+        // Plugin IDs follow the same grouped order as the visible menu.
+        plugin_rows(&chosen, &list_names(&chosen))
+            .iter()
+            .filter(|row| row.index >= 0)
+            .map(|row| chosen[row.index as usize - AVAILABLE_EFFECTS.len()].clone())
             .collect()
     }
 
@@ -896,6 +903,14 @@ mod menu_tests {
         // Every built-in effect once, under a heading; none in Other.
         let items: Vec<_> = rows.iter().filter(|r| r.index >= 0).collect();
         assert_eq!(items.len(), AVAILABLE_EFFECTS.len());
+        assert_eq!(
+            items
+                .iter()
+                .map(|row| row.index as usize + 1)
+                .collect::<Vec<_>>(),
+            opendj_engine::EFFECT_MENU_ORDER
+        );
+
         assert_eq!(rows[0].label, "DELAY & ECHO");
         assert!(rows.iter().all(|r| r.label != "OTHER"));
         // A to Z within a kind: Echo, Echo Out, Filter Echo, Spiral.

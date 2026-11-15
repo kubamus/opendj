@@ -245,6 +245,32 @@ component EffectPicker inherits Rectangle {
         }
     }
     property <int> menu-tab;
+    property <int> selector-index: Controls.resolve(fx, "show_selector");
+    property <float> selector-request: Controls.value(selector-index, Controls.tick);
+    changed loaded => {
+        // The audio thread may apply FX SELECT after the menu opens.
+        if selector-request > 0 {
+            menu-tab = loaded > EffectList.builtin-count ? 1 : 0;
+        }
+    }
+    changed selector-request => {
+        selector-hide.running = false;
+        if selector-request > 0 {
+            menu-tab = loaded > EffectList.builtin-count ? 1 : 0;
+            menu.show();
+            selector-hide.running = true;
+        } else {
+            menu.close();
+        }
+    }
+    selector-hide := Timer {
+        interval: 3s;
+        running: false;
+        triggered => {
+            self.running = false;
+            Controls.set-value(selector-index, 0);
+        }
+    }
     ta := TouchArea {
         mouse-cursor: pointer;
         clicked => {
@@ -277,6 +303,8 @@ component EffectPicker inherits Rectangle {
                     Controls.set-value(enabled-index, 1);
                 }
                 menu.close();
+                selector-hide.running = false;
+                Controls.set-value(selector-index, 0);
             }
         }
     }

@@ -1638,6 +1638,14 @@ export component EffectMenu inherits VerticalLayout {
     callback picked(index: int);
     property <bool> tabs: EffectList.plugin-rows.length > 0;
     property <[FxRow]> rows: tabs && tab == 1 ? EffectList.plugin-rows : EffectList.builtin-rows;
+    property <length> selected-top: -1px;
+    function reveal-selection() {
+        if selected-top >= 0px {
+            effect-scroll.content-y = clamp(effect-scroll.height / 2 - selected-top - 13px,
+                min(0px, effect-scroll.height - effect-scroll.content-height), 0px);
+        }
+    }
+    changed selected-top => { reveal-selection(); }
     padding: 6px;
     spacing: 4px;
     if tabs: HorizontalLayout {
@@ -1657,14 +1665,19 @@ export component EffectMenu inherits VerticalLayout {
         }
     }
     if tabs: Rectangle { height: 1px; background: Theme.border; }
-    Flickable {
+    effect-scroll := Flickable {
         height: min(fx-rows.preferred-height, 420px);
-        viewport-height: fx-rows.preferred-height;
+        content-height: fx-rows.preferred-height;
+        changed height => { root.reveal-selection(); }
+        changed content-height => { root.reveal-selection(); }
         fx-rows := VerticalLayout {
             spacing: 0px;
             for row in rows: Rectangle {
                 property <bool> heading: row.index < 0;
                 property <bool> current: !heading && loaded == row.index + 1;
+                init => { if current { root.selected-top = self.y; } }
+                changed current => { if current { root.selected-top = self.y; } }
+                changed y => { if current { root.selected-top = self.y; } }
                 height: heading ? 22px : 26px;
                 border-radius: 4px;
                 background: current ? tint.with-alpha(0.35) : !heading && eta.has-hover ? Theme.n-3a3a3d : transparent;

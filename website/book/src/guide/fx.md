@@ -21,7 +21,8 @@ FX in the middle, under the mixer.
 Each effect has:
 
 - **Its name.** Click it for the list of effects, or step through them with
-  the arrows either side.
+  the arrows either side. Stepping follows the list’s category and name order;
+  the list scrolls to keep the selected effect in view.
 - **ON** to switch it on and off.
 - **Its length in beats**, with ◀ and ▶ to halve and double it. Effects
   that have no length show a slider instead, for their main setting:
@@ -68,6 +69,22 @@ The **BEAT FX** cell under the mixer is one effect on its own. Pick it by
 name, choose where it plays with **1**, **2** or **1&2** (deck 1, deck 2 or
 both), then use **ON**, its beats and **D/W** as on a deck effect. On a
 DDJ-FLX4 the BEAT FX section of the controller plays it.
+
+### Pioneer DDJ-400
+
+The controller’s **BEAT FX** section controls the Beat FX under the mixer:
+
+- **FX SELECT** steps through the effects in the list’s order; hold **SHIFT**
+  to step backwards. The list opens with the selected effect highlighted,
+  follows it as you step, and closes after three seconds without another
+  press, or when you press **ON/OFF**.
+- **LEVEL/DEPTH** adjusts the effect’s depth. As with other controller
+  knobs, move through the on-screen value to pick it up.
+- **BEAT ◀ / ▶** halve or double the effect’s beat length.
+- **CH SELECT** routes it to deck **1**, deck **2** or **MASTER**.
+- **ON/OFF** toggles the effect; **SHIFT + ON/OFF** releases its tail.
+- **SHIFT + BEAT ◀** returns to automatic tempo; **SHIFT + BEAT ▶** taps
+  the effect tempo.
 
 ## Color FX
 

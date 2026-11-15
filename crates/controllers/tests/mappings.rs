@@ -48,6 +48,79 @@ fn settle(c: &mut Controller, ms: u64) {
 }
 
 #[test]
+fn ddj_400_beat_fx() {
+    let reg = ControlRegistry::new();
+    let (mut engine, _) = opendj_engine::engine::Engine::new(&reg, 44_100.0);
+    let path = default_mappings_dir()
+        .unwrap()
+        .join("Pioneer-DDJ-400.midi.xml");
+    let mut c = Controller::new("test", Mapping::load(&path).unwrap(), reg.clone()).unwrap();
+    let unit = "[EffectRack1_EffectUnit5]";
+    let slot = "[EffectRack1_EffectUnit5_Effect1]";
+    assert!(get(&reg, slot, "loaded_effect") > 0.0);
+    c.receive(&[0x94, 0x47, 0x7f]);
+    c.receive(&[0x94, 0x47, 0x00]);
+    assert_eq!(get(&reg, slot, "enabled"), 1.0);
+    assert_eq!(get(&reg, unit, "enabled"), 1.0);
+    c.receive(&[0x94, 0x47, 0x7f]);
+    c.receive(&[0x94, 0x47, 0x00]);
+    assert_eq!(get(&reg, slot, "enabled"), 0.0);
+
+    for (note, target) in [(0x10, "Channel1"), (0x11, "Channel2"), (0x14, "Master")] {
+        c.receive(&[0x94, note, 0x7f]);
+        c.receive(&[0x94, note, 0x00]);
+        for route in ["Channel1", "Channel2", "Master"] {
+            assert_eq!(
+                get(&reg, unit, &format!("group_[{route}]_enable")),
+                if route == target { 1.0 } else { 0.0 }
+            );
+        }
+    }
+    for value in (0..=127).rev() {
+        c.receive(&[0xb4, 0x02, value]);
+    }
+    assert_eq!(get(&reg, slot, "meta"), 0.0);
+    c.receive(&[0xb4, 0x02, 127]);
+    assert_eq!(get(&reg, slot, "meta"), 1.0);
+    // Each press must select another effect, including after an engine tick.
+    assert_eq!(get(&reg, slot, "loaded_effect"), 1.0);
+    for expected in [9.0, 18.0] {
+        let request = get(&reg, slot, "show_selector");
+        c.receive(&[0x94, 0x63, 0x7f]);
+        c.receive(&[0x94, 0x63, 0x00]);
+        assert!(get(&reg, slot, "show_selector") > request);
+        engine.process(&mut [0.0; 128], 2);
+        assert_eq!(get(&reg, slot, "loaded_effect"), expected);
+    }
+    c.receive(&[0x94, 0x64, 0x7f]);
+    c.receive(&[0x94, 0x64, 0x00]);
+    engine.process(&mut [0.0; 128], 2);
+    assert_eq!(get(&reg, slot, "loaded_effect"), 9.0);
+    assert!(get(&reg, slot, "show_selector") > 0.0);
+    c.receive(&[0x94, 0x47, 0x7f]);
+    c.receive(&[0x94, 0x47, 0x00]);
+    assert_eq!(get(&reg, slot, "show_selector"), 0.0);
+    c.receive(&[0x94, 0x63, 0x7f]);
+    c.receive(&[0x94, 0x63, 0x00]);
+    assert!(get(&reg, slot, "show_selector") > 0.0);
+    c.receive(&[0x94, 0x43, 0x7f]);
+    c.receive(&[0x94, 0x43, 0x00]);
+    assert_eq!(get(&reg, slot, "show_selector"), 0.0);
+    reg.get(slot, "beats").unwrap().set(0.5);
+    c.receive(&[0x94, 0x4a, 0x7f]);
+    c.receive(&[0x94, 0x4a, 0x00]);
+    assert_eq!(get(&reg, slot, "beats"), 0.25);
+    c.receive(&[0x94, 0x4b, 0x7f]);
+    assert_eq!(get(&reg, slot, "beats"), 0.5);
+    // Leave the deck's separate FX controls alone.
+    assert_eq!(
+        get(&reg, "[EffectRack1_EffectUnit1_Effect1]", "enabled"),
+        0.0
+    );
+    assert!(c.errors().is_empty(), "{:?}", c.errors());
+}
+
+#[test]
 fn ddj_400_tempo_range_keeps_the_tempo() {
     let reg = ControlRegistry::new();
     let (mut engine, _input) = opendj_engine::engine::Engine::new(&reg, 44_100.0);

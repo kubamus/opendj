@@ -1505,6 +1505,7 @@
 [EffectRack1_EffectUnit10_Effect1],parameter4
 [EffectRack1_EffectUnit10_Effect1],prev_effect
 [EffectRack1_EffectUnit10_Effect1],show_editor
+[EffectRack1_EffectUnit10_Effect1],show_selector
 [EffectRack1_EffectUnit10_Effect2],beats
 [EffectRack1_EffectUnit10_Effect2],button_parameter1
 [EffectRack1_EffectUnit10_Effect2],button_parameter2
@@ -1523,6 +1524,7 @@
 [EffectRack1_EffectUnit10_Effect2],parameter4
 [EffectRack1_EffectUnit10_Effect2],prev_effect
 [EffectRack1_EffectUnit10_Effect2],show_editor
+[EffectRack1_EffectUnit10_Effect2],show_selector
 [EffectRack1_EffectUnit10_Effect3],beats
 [EffectRack1_EffectUnit10_Effect3],button_parameter1
 [EffectRack1_EffectUnit10_Effect3],button_parameter2
@@ -1541,6 +1543,7 @@
 [EffectRack1_EffectUnit10_Effect3],parameter4
 [EffectRack1_EffectUnit10_Effect3],prev_effect
 [EffectRack1_EffectUnit10_Effect3],show_editor
+[EffectRack1_EffectUnit10_Effect3],show_selector
 [EffectRack1_EffectUnit1],bpm
 [EffectRack1_EffectUnit1],bpm_auto
 [EffectRack1_EffectUnit1],bpm_tap
@@ -1594,6 +1597,7 @@
 [EffectRack1_EffectUnit1_Effect1],parameter4
 [EffectRack1_EffectUnit1_Effect1],prev_effect
 [EffectRack1_EffectUnit1_Effect1],show_editor
+[EffectRack1_EffectUnit1_Effect1],show_selector
 [EffectRack1_EffectUnit1_Effect2],beats
 [EffectRack1_EffectUnit1_Effect2],button_parameter1
 [EffectRack1_EffectUnit1_Effect2],button_parameter2
@@ -1612,6 +1616,7 @@
 [EffectRack1_EffectUnit1_Effect2],parameter4
 [EffectRack1_EffectUnit1_Effect2],prev_effect
 [EffectRack1_EffectUnit1_Effect2],show_editor
+[EffectRack1_EffectUnit1_Effect2],show_selector
 [EffectRack1_EffectUnit1_Effect3],beats
 [EffectRack1_EffectUnit1_Effect3],button_parameter1
 [EffectRack1_EffectUnit1_Effect3],button_parameter2
@@ -1630,6 +1635,7 @@
 [EffectRack1_EffectUnit1_Effect3],parameter4
 [EffectRack1_EffectUnit1_Effect3],prev_effect
 [EffectRack1_EffectUnit1_Effect3],show_editor
+[EffectRack1_EffectUnit1_Effect3],show_selector
 [EffectRack1_EffectUnit2],bpm
 [EffectRack1_EffectUnit2],bpm_auto
 [EffectRack1_EffectUnit2],bpm_tap
@@ -1683,6 +1689,7 @@
 [EffectRack1_EffectUnit2_Effect1],parameter4
 [EffectRack1_EffectUnit2_Effect1],prev_effect
 [EffectRack1_EffectUnit2_Effect1],show_editor
+[EffectRack1_EffectUnit2_Effect1],show_selector
 [EffectRack1_EffectUnit2_Effect2],beats
 [EffectRack1_EffectUnit2_Effect2],button_parameter1
 [EffectRack1_EffectUnit2_Effect2],button_parameter2
@@ -1701,6 +1708,7 @@
 [EffectRack1_EffectUnit2_Effect2],parameter4
 [EffectRack1_EffectUnit2_Effect2],prev_effect
 [EffectRack1_EffectUnit2_Effect2],show_editor
+[EffectRack1_EffectUnit2_Effect2],show_selector
 [EffectRack1_EffectUnit2_Effect3],beats
 [EffectRack1_EffectUnit2_Effect3],button_parameter1
 [EffectRack1_EffectUnit2_Effect3],button_parameter2
@@ -1719,6 +1727,7 @@
 [EffectRack1_EffectUnit2_Effect3],parameter4
 [EffectRack1_EffectUnit2_Effect3],prev_effect
 [EffectRack1_EffectUnit2_Effect3],show_editor
+[EffectRack1_EffectUnit2_Effect3],show_selector
 [EffectRack1_EffectUnit3],bpm
 [EffectRack1_EffectUnit3],bpm_auto
 [EffectRack1_EffectUnit3],bpm_tap
@@ -1772,6 +1781,7 @@
 [EffectRack1_EffectUnit3_Effect1],parameter4
 [EffectRack1_EffectUnit3_Effect1],prev_effect
 [EffectRack1_EffectUnit3_Effect1],show_editor
+[EffectRack1_EffectUnit3_Effect1],show_selector
 [EffectRack1_EffectUnit3_Effect2],beats
 [EffectRack1_EffectUnit3_Effect2],button_parameter1
 [EffectRack1_EffectUnit3_Effect2],button_parameter2
@@ -1790,6 +1800,7 @@
 [EffectRack1_EffectUnit3_Effect2],parameter4
 [EffectRack1_EffectUnit3_Effect2],prev_effect
 [EffectRack1_EffectUnit3_Effect2],show_editor
+[EffectRack1_EffectUnit3_Effect2],show_selector
 [EffectRack1_EffectUnit3_Effect3],beats
 [EffectRack1_EffectUnit3_Effect3],button_parameter1
 [EffectRack1_EffectUnit3_Effect3],button_parameter2
@@ -1808,6 +1819,7 @@
 [EffectRack1_EffectUnit3_Effect3],parameter4
 [EffectRack1_EffectUnit3_Effect3],prev_effect
 [EffectRack1_EffectUnit3_Effect3],show_editor
+[EffectRack1_EffectUnit3_Effect3],show_selector
 [EffectRack1_EffectUnit4],bpm
 [EffectRack1_EffectUnit4],bpm_auto
 [EffectRack1_EffectUnit4],bpm_tap
@@ -1861,6 +1873,7 @@
 [EffectRack1_EffectUnit4_Effect1],parameter4
 [EffectRack1_EffectUnit4_Effect1],prev_effect
 [EffectRack1_EffectUnit4_Effect1],show_editor
+[EffectRack1_EffectUnit4_Effect1],show_selector
 [EffectRack1_EffectUnit4_Effect2],beats
 [EffectRack1_EffectUnit4_Effect2],button_parameter1
 [EffectRack1_EffectUnit4_Effect2],button_parameter2
@@ -1879,6 +1892,7 @@
 [EffectRack1_EffectUnit4_Effect2],parameter4
 [EffectRack1_EffectUnit4_Effect2],prev_effect
 [EffectRack1_EffectUnit4_Effect2],show_editor
+[EffectRack1_EffectUnit4_Effect2],show_selector
 [EffectRack1_EffectUnit4_Effect3],beats
 [EffectRack1_EffectUnit4_Effect3],button_parameter1
 [EffectRack1_EffectUnit4_Effect3],button_parameter2
@@ -1897,6 +1911,7 @@
 [EffectRack1_EffectUnit4_Effect3],parameter4
 [EffectRack1_EffectUnit4_Effect3],prev_effect
 [EffectRack1_EffectUnit4_Effect3],show_editor
+[EffectRack1_EffectUnit4_Effect3],show_selector
 [EffectRack1_EffectUnit5],bpm
 [EffectRack1_EffectUnit5],bpm_auto
 [EffectRack1_EffectUnit5],bpm_tap
@@ -1950,6 +1965,7 @@
 [EffectRack1_EffectUnit5_Effect1],parameter4
 [EffectRack1_EffectUnit5_Effect1],prev_effect
 [EffectRack1_EffectUnit5_Effect1],show_editor
+[EffectRack1_EffectUnit5_Effect1],show_selector
 [EffectRack1_EffectUnit5_Effect2],beats
 [EffectRack1_EffectUnit5_Effect2],button_parameter1
 [EffectRack1_EffectUnit5_Effect2],button_parameter2
@@ -1968,6 +1984,7 @@
 [EffectRack1_EffectUnit5_Effect2],parameter4
 [EffectRack1_EffectUnit5_Effect2],prev_effect
 [EffectRack1_EffectUnit5_Effect2],show_editor
+[EffectRack1_EffectUnit5_Effect2],show_selector
 [EffectRack1_EffectUnit5_Effect3],beats
 [EffectRack1_EffectUnit5_Effect3],button_parameter1
 [EffectRack1_EffectUnit5_Effect3],button_parameter2
@@ -1986,6 +2003,7 @@
 [EffectRack1_EffectUnit5_Effect3],parameter4
 [EffectRack1_EffectUnit5_Effect3],prev_effect
 [EffectRack1_EffectUnit5_Effect3],show_editor
+[EffectRack1_EffectUnit5_Effect3],show_selector
 [EffectRack1_EffectUnit6],bpm
 [EffectRack1_EffectUnit6],bpm_auto
 [EffectRack1_EffectUnit6],bpm_tap
@@ -2039,6 +2057,7 @@
 [EffectRack1_EffectUnit6_Effect1],parameter4
 [EffectRack1_EffectUnit6_Effect1],prev_effect
 [EffectRack1_EffectUnit6_Effect1],show_editor
+[EffectRack1_EffectUnit6_Effect1],show_selector
 [EffectRack1_EffectUnit6_Effect2],beats
 [EffectRack1_EffectUnit6_Effect2],button_parameter1
 [EffectRack1_EffectUnit6_Effect2],button_parameter2
@@ -2057,6 +2076,7 @@
 [EffectRack1_EffectUnit6_Effect2],parameter4
 [EffectRack1_EffectUnit6_Effect2],prev_effect
 [EffectRack1_EffectUnit6_Effect2],show_editor
+[EffectRack1_EffectUnit6_Effect2],show_selector
 [EffectRack1_EffectUnit6_Effect3],beats
 [EffectRack1_EffectUnit6_Effect3],button_parameter1
 [EffectRack1_EffectUnit6_Effect3],button_parameter2
@@ -2075,6 +2095,7 @@
 [EffectRack1_EffectUnit6_Effect3],parameter4
 [EffectRack1_EffectUnit6_Effect3],prev_effect
 [EffectRack1_EffectUnit6_Effect3],show_editor
+[EffectRack1_EffectUnit6_Effect3],show_selector
 [EffectRack1_EffectUnit7],bpm
 [EffectRack1_EffectUnit7],bpm_auto
 [EffectRack1_EffectUnit7],bpm_tap
@@ -2128,6 +2149,7 @@
 [EffectRack1_EffectUnit7_Effect1],parameter4
 [EffectRack1_EffectUnit7_Effect1],prev_effect
 [EffectRack1_EffectUnit7_Effect1],show_editor
+[EffectRack1_EffectUnit7_Effect1],show_selector
 [EffectRack1_EffectUnit7_Effect2],beats
 [EffectRack1_EffectUnit7_Effect2],button_parameter1
 [EffectRack1_EffectUnit7_Effect2],button_parameter2
@@ -2146,6 +2168,7 @@
 [EffectRack1_EffectUnit7_Effect2],parameter4
 [EffectRack1_EffectUnit7_Effect2],prev_effect
 [EffectRack1_EffectUnit7_Effect2],show_editor
+[EffectRack1_EffectUnit7_Effect2],show_selector
 [EffectRack1_EffectUnit7_Effect3],beats
 [EffectRack1_EffectUnit7_Effect3],button_parameter1
 [EffectRack1_EffectUnit7_Effect3],button_parameter2
@@ -2164,6 +2187,7 @@
 [EffectRack1_EffectUnit7_Effect3],parameter4
 [EffectRack1_EffectUnit7_Effect3],prev_effect
 [EffectRack1_EffectUnit7_Effect3],show_editor
+[EffectRack1_EffectUnit7_Effect3],show_selector
 [EffectRack1_EffectUnit8],bpm
 [EffectRack1_EffectUnit8],bpm_auto
 [EffectRack1_EffectUnit8],bpm_tap
@@ -2217,6 +2241,7 @@
 [EffectRack1_EffectUnit8_Effect1],parameter4
 [EffectRack1_EffectUnit8_Effect1],prev_effect
 [EffectRack1_EffectUnit8_Effect1],show_editor
+[EffectRack1_EffectUnit8_Effect1],show_selector
 [EffectRack1_EffectUnit8_Effect2],beats
 [EffectRack1_EffectUnit8_Effect2],button_parameter1
 [EffectRack1_EffectUnit8_Effect2],button_parameter2
@@ -2235,6 +2260,7 @@
 [EffectRack1_EffectUnit8_Effect2],parameter4
 [EffectRack1_EffectUnit8_Effect2],prev_effect
 [EffectRack1_EffectUnit8_Effect2],show_editor
+[EffectRack1_EffectUnit8_Effect2],show_selector
 [EffectRack1_EffectUnit8_Effect3],beats
 [EffectRack1_EffectUnit8_Effect3],button_parameter1
 [EffectRack1_EffectUnit8_Effect3],button_parameter2
@@ -2253,6 +2279,7 @@
 [EffectRack1_EffectUnit8_Effect3],parameter4
 [EffectRack1_EffectUnit8_Effect3],prev_effect
 [EffectRack1_EffectUnit8_Effect3],show_editor
+[EffectRack1_EffectUnit8_Effect3],show_selector
 [EffectRack1_EffectUnit9],bpm
 [EffectRack1_EffectUnit9],bpm_auto
 [EffectRack1_EffectUnit9],bpm_tap
@@ -2306,6 +2333,7 @@
 [EffectRack1_EffectUnit9_Effect1],parameter4
 [EffectRack1_EffectUnit9_Effect1],prev_effect
 [EffectRack1_EffectUnit9_Effect1],show_editor
+[EffectRack1_EffectUnit9_Effect1],show_selector
 [EffectRack1_EffectUnit9_Effect2],beats
 [EffectRack1_EffectUnit9_Effect2],button_parameter1
 [EffectRack1_EffectUnit9_Effect2],button_parameter2
@@ -2324,6 +2352,7 @@
 [EffectRack1_EffectUnit9_Effect2],parameter4
 [EffectRack1_EffectUnit9_Effect2],prev_effect
 [EffectRack1_EffectUnit9_Effect2],show_editor
+[EffectRack1_EffectUnit9_Effect2],show_selector
 [EffectRack1_EffectUnit9_Effect3],beats
 [EffectRack1_EffectUnit9_Effect3],button_parameter1
 [EffectRack1_EffectUnit9_Effect3],button_parameter2
@@ -2342,6 +2371,7 @@
 [EffectRack1_EffectUnit9_Effect3],parameter4
 [EffectRack1_EffectUnit9_Effect3],prev_effect
 [EffectRack1_EffectUnit9_Effect3],show_editor
+[EffectRack1_EffectUnit9_Effect3],show_selector
 [EqualizerRack1_[Auxiliary1]_Effect1],button_parameter1
 [EqualizerRack1_[Auxiliary1]_Effect1],button_parameter2
 [EqualizerRack1_[Auxiliary1]_Effect1],button_parameter3
