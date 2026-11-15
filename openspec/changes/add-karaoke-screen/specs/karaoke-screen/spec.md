@@ -12,14 +12,14 @@ openDJ SHALL offer a karaoke screen, a window of its own, that follows the track
 - **THEN** the karaoke screen opens full screen on the second display
 
 ### Requirement: Word fill
-The word being sung SHALL fill with the accent color from left to right as it is sung. When lyrics are timed only by line, the line's words SHALL be spread over it by their length, ending by the next line's start.
+In the Original style, the word being sung SHALL fill with the accent color from left to right as it is sung. When lyrics are timed only by line, the line's words SHALL be spread over it by their length, ending by the next line's start.
 
 #### Scenario: Filling a timed word
 - **WHEN** a line reads `[00:10.00]<00:10.00>Hold <00:10.40>the <00:10.70>line` and the deck is at 10.5 s
 - **THEN** "Hold" is filled and "the" is a third filled
 
 ### Requirement: Count-in
-Before a line that follows a break, the screen SHALL show the line to come with up to four dots, one per beat left at the deck's tempo.
+In the Original style, before a line that follows a break, the screen SHALL show the line to come with up to four dots, one per beat left at the deck's tempo.
 
 #### Scenario: Counting in
 - **WHEN** the next line starts in two seconds and the deck plays at 120 BPM
@@ -42,3 +42,15 @@ While the karaoke screen is open and the DJ shares it, openDJ SHALL serve the sa
 #### Scenario: Closing
 - **WHEN** the DJ closes the karaoke screen
 - **THEN** the page stops being served on the network, unless the now-playing overlay is set to allow other devices
+
+### Requirement: Presentation styles
+Settings SHALL offer Original and Artwork lyrics presentations and a saved highlight palette for Original. Choices SHALL apply live to the native window and shared web page without adding audience-facing controls.
+
+#### Scenario: Artwork lyrics
+- **WHEN** Artwork lyrics is selected
+- **THEN** a high-resolution cover and readable song metadata appear beside smoothly scrolling lyrics, sung words brighten over their timed duration, and surrounding lyrics blur and fade before reaching the viewport edges
+- **AND** missing artwork uses a neutral dark background, while missing or untimed lyrics show a message outside the artwork pane
+
+#### Scenario: Responsive playback
+- **WHEN** playback switches tracks or the karaoke window regains focus or changes size
+- **THEN** lyric layers remain aligned, stale artwork cannot replace the current track, and expensive artwork preparation runs off the UI thread

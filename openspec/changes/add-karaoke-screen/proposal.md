@@ -13,6 +13,8 @@ With lyrics read and timed (`add-synced-lyrics`) and stems separated on load, op
 - **Guide vocal**: while the screen is open the Lyrics tab has a Vocals slider, the vocal stem's level on the deck followed (none to full). The level set there is held on the next track the screen follows, so a whole night can run with the voice down.
 - **Karaoke page**: the same screen as a page on openDJ's local web server (the now-playing overlay's, port 7487), for a TV's browser, a tablet or a laptop on the network. Share in the Lyrics tab serves it on the network while the karaoke screen is open and shows its address.
 
+- **Presentation settings**: keep Original and offer Artwork lyrics with high-resolution covers, readable metadata, timed word brightening, smooth scrolling and soft edges. Save the style and Original highlight color in Settings and apply them live to both screens.
+
 ## Capabilities
 
 ### New Capabilities
@@ -35,4 +37,4 @@ None.
 
 ## Performance
 
-The screen is updated from the Lyrics tab's poll on the UI thread, a few string compares a frame; nothing runs while it is closed. The second window is drawn only when what it shows changes, apart from the filling word.
+The screen is updated from the Lyrics tab's poll on the UI thread, a few string compares a frame; nothing runs while it is closed. The second window is drawn only when what it shows changes, apart from word animation and scrolling. Decode, resize, blur and encode artwork on a background worker, retain only current results, and cache presentation settings so playback does not read them from disk.
