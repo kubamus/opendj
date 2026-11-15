@@ -85,7 +85,10 @@ component CrossfaderAssign inherits Rectangle {
 
 // One deck's strip.
 export component DeckStrip inherits Rectangle {
+    // Only the active layout accepts cross-window drops.
+    in property <bool> cross-enabled;
     in property <int> deck;
+    in property <bool> performance;
     in property <DeckInfo> info;
     in property <image> overview;
     out property <length> overview-width: header.overview-width;
@@ -104,7 +107,13 @@ export component DeckStrip inherits Rectangle {
     // Files dragged in from Finder or a file manager (see TrackDrag.files-over).
     property <bool> under-files: TrackDrag.files-x >= self.absolute-position.x && TrackDrag.files-x < self.absolute-position.x + self.width
         && TrackDrag.files-y >= self.absolute-position.y && TrackDrag.files-y < self.absolute-position.y + self.height;
-    property <bool> files-here: TrackDrag.files-over && under-files;
+    property <bool> under-cross: cross-enabled && TrackDrag.cross-x >= self.absolute-position.x && TrackDrag.cross-x < self.absolute-position.x + self.width
+        && TrackDrag.cross-y >= self.absolute-position.y && TrackDrag.cross-y < self.absolute-position.y + self.height;
+    property <bool> files-here: (TrackDrag.files-over && under-files) || (TrackDrag.cross-over && under-cross);
+    property <int> cross-dropped: TrackDrag.cross-dropped;
+    changed cross-dropped => {
+        if under-cross { TrackDrag.drop(deck, TrackDrag.cross-data); }
+    }
     property <int> files-dropped: TrackDrag.files-dropped;
     changed files-dropped => {
         if under-files && live > 0 {
@@ -153,7 +162,7 @@ export component DeckStrip inherits Rectangle {
                 // The channel: the knob mode and headphone cue, the EQs (or
                 // stems or sculpt), the fader, and gain over the meter.
                 HorizontalLayout {
-                    height: 74px;
+                    height: performance ? max(74px, (root.height - header.height - (PadsUi.visible ? 77px : 0px) - 77px) * 0.65) : 74px;
                     spacing: 4px;
                     if external: Text {
                         horizontal-stretch: 1;
@@ -180,12 +189,12 @@ export component DeckStrip inherits Rectangle {
                     if !external: HorizontalLayout {
                         spacing: 4px;
                         horizontal-stretch: 4;
-                        for place in 4: SideKnob { deck: deck; place: [2, 1, 0, 3][place]; size: 32px; cfx-arrow-left: false; horizontal-stretch: 1; min-width: 40px; }
+                        for place in 4: SideKnob { deck: deck; place: [2, 1, 0, 3][place]; size: performance ? 36px : 32px; cfx-arrow-left: false; horizontal-stretch: 1; min-width: 40px; }
                     }
                     if !external: ControlFader { group: group; key: "volume"; tint: tint; ticks: 5; width: 40px; }
                     VerticalLayout {
                         spacing: 4px;
-                        if !external: Knob { group: group; key: "pregain"; size: 20px; }
+                        if !external: Knob { group: group; key: "pregain"; size: performance ? 26px : 20px; }
                         HorizontalLayout { alignment: center; vertical-stretch: 1; StereoMeter { group: group; } }
                     }
                 }
@@ -193,12 +202,12 @@ export component DeckStrip inherits Rectangle {
                 // PLAY, CUE and the loop.
                 if live == 0: HorizontalLayout {
                     spacing: 6px;
-                    PlayButton { group: group; tint: tint; width: 52px; height: 32px; }
-                    ControlButton { group: group; key: "cue_default"; text: "CUE"; momentary: true; tint: tint; outline-when-lit: true; font-size: 13px; horizontal-stretch: 1; height: 32px; }
+                    PlayButton { group: group; tint: tint; width: 52px; height: performance ? 40px : 32px; }
+                    ControlButton { group: group; key: "cue_default"; text: "CUE"; momentary: true; tint: tint; outline-when-lit: true; font-size: 13px; horizontal-stretch: 1; height: performance ? 40px : 32px; }
                     VerticalLayout {
                         spacing: 2px;
                         horizontal-stretch: 1;
-                        LoopStepper { group: group; info: info; height: 32px; }
+                        LoopStepper { group: group; info: info; height: performance ? 40px : 32px; }
                         Text { text: "LOOP"; color: Theme.text-dim; font-size: 9px; font-weight: 600; letter-spacing: 0.5px; horizontal-alignment: center; }
                     }
                 }
@@ -207,7 +216,7 @@ export component DeckStrip inherits Rectangle {
         }
     }
 
-    if TrackDrag.active || InstrumentsUi.dragging || TrackDrag.files-over || drop.has-drag: Rectangle {
+    if TrackDrag.active || InstrumentsUi.dragging || TrackDrag.files-over || TrackDrag.cross-over || drop.has-drag: Rectangle {
         border-radius: Theme.radius + 2px;
         border-width: drop.has-drag || files-here ? 3px : 2px;
         border-color: drop.has-drag || files-here ? tint : tint.transparentize(0.55);

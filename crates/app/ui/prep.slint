@@ -6,6 +6,7 @@
 // at the zoom every large waveform shares (zoom.slint). No mixer,
 // crossfader or FX.
 import { Theme } from "theme.slint";
+import { TrackDrag } from "library.slint";
 import { ControlButton, ControlKnob, Controls, CueHeadphones } from "controls.slint";
 import { DeckInfo, Header, PlayButton } from "deck.slint";
 import { CueList } from "cues.slint";
@@ -128,6 +129,7 @@ component GridPanel inherits VerticalLayout {
 // Play and CUE, beat jumps of 1, 4 and 8 bars, a loop, and the deck's level
 // and headphone cue, since Prep has no mixer.
 component PrepTransport inherits VerticalLayout {
+    in property <bool> performance;
     in property <string> group;
     in property <DeckInfo> info;
     in property <color> tint;
@@ -137,8 +139,8 @@ component PrepTransport inherits VerticalLayout {
     HorizontalLayout {
         alignment: center;
         spacing: 10px;
-        ControlButton { group: group; key: "cue_default"; text: "CUE"; momentary: true; tint: tint; outline-when-lit: true; font-size: 14px; width: 72px; height: 40px; }
-        PlayButton { group: group; tint: tint; width: 72px; height: 40px; }
+        ControlButton { group: group; key: "cue_default"; text: "CUE"; momentary: true; tint: tint; outline-when-lit: true; font-size: 14px; width: performance ? 96px : 72px; height: performance ? 56px : 40px; }
+        PlayButton { group: group; tint: tint; width: performance ? 96px : 72px; height: performance ? 56px : 40px; }
     }
     HorizontalLayout {
         alignment: center;
@@ -294,6 +296,14 @@ component ReadyBar inherits HorizontalLayout {
 }
 
 export component PrepDeck inherits Rectangle {
+    // Only the active layout accepts cross-window drops.
+    in property <bool> cross-enabled;
+    in property <bool> performance;
+    property <bool> under-cross: cross-enabled && TrackDrag.cross-x >= self.absolute-position.x && TrackDrag.cross-x < self.absolute-position.x + self.width
+        && TrackDrag.cross-y >= self.absolute-position.y && TrackDrag.cross-y < self.absolute-position.y + self.height;
+    property <int> cross-dropped: TrackDrag.cross-dropped;
+    changed cross-dropped => { if under-cross { TrackDrag.drop(0, TrackDrag.cross-data); } }
+
     in property <DeckInfo> info;
     in property <image> overview;
     out property <length> overview-width: header.overview-width;
@@ -306,18 +316,23 @@ export component PrepDeck inherits Rectangle {
         HorizontalLayout {
             spacing: 1px;
             vertical-stretch: 1;
+            // Fixed-size grid buttons must not cap the whole shared row.
+            max-height: 100000px;
             Rectangle {
                 background: Theme.panel;
+                max-height: 100000px;
                 width: 440px;
                 GridPanel { group: group; info: info; }
             }
             Rectangle {
                 background: Theme.panel;
+                max-height: 100000px;
                 width: 310px;
-                PrepTransport { group: group; info: info; tint: tint; }
+                PrepTransport { performance: root.performance; group: group; info: info; tint: tint; }
             }
             Rectangle {
                 background: Theme.panel;
+                max-height: 100000px;
                 horizontal-stretch: 1;
                 VerticalLayout {
                     padding: 10px;
@@ -335,4 +350,10 @@ export component PrepDeck inherits Rectangle {
             }
         }
     }
+    if TrackDrag.cross-over && under-cross: Rectangle {
+        border-width: 2px;
+        border-color: Theme.deck1;
+        background: Theme.deck1.with-alpha(0.08);
+    }
+
 }

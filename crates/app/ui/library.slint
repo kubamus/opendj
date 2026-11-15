@@ -248,6 +248,13 @@ export global TrackDrag {
     // show that it accepts drops.
     in-out property <bool> active;
     pure callback payload(first: int, last: int) -> data-transfer;
+    // The detached window forwards internal track drags to the main window.
+    callback cross-start(data: data-transfer);
+    in property <data-transfer> cross-data;
+    in property <length> cross-x: -1px;
+    in property <length> cross-y: -1px;
+    in property <bool> cross-over;
+    in property <int> cross-dropped;
     // Rows of the side panel's tab `tab`.
     pure callback side-payload(tab: int, first: int, last: int) -> data-transfer;
     // The track on a deck, picked up by its cover.
@@ -4721,7 +4728,7 @@ component TrackList inherits Rectangle {
                 border-radius: 4px;
                 // Rows alternate darker and lighter.
                 background: selected ? (focused ? Theme.selection : Theme.selection-idle) : rta.has-hover ? Theme.n-2a2a2e : r.has-color && ColumnUi.color-mode == 2 ? (mod(i, 2) == 1 ? Theme.row-alt : Theme.row).mix(r.color, 0.86) : mod(i, 2) == 1 ? Theme.row-alt : Theme.row;
-                DragArea {
+                row-drag := DragArea {
                     // Picked rows go together (the browser knows which); any
                     // other row goes alone.
                     data: TrackDrag.payload(i, i);
@@ -4745,6 +4752,9 @@ component TrackList inherits Rectangle {
                             if e.button == PointerEventButton.left && e.kind == PointerEventKind.down {
                                 shift-held = e.modifiers.shift;
                                 cmd-held = e.modifiers.control;
+                                // Arm before the backend can coalesce a quick drag.
+                                // The payload is identical to the ordinary drag.
+                                TrackDrag.cross-start(row-drag.data);
                             }
                             // A Spotify track the collection doesn't have: pick which it is.
                             if !r.available && r.streamed && e.button == PointerEventButton.right && e.kind == PointerEventKind.down {
@@ -6041,7 +6051,7 @@ component SidePanel inherits Rectangle {
                         background: picked ? (keys.has-focus ? Theme.selection : #5a4d80) : sta.has-hover ? Theme.n-1f1f22 : transparent;
                         // Picked rows go together, onto a deck, a list in
                         // the tree, or elsewhere in this list to reorder it.
-                        DragArea {
+                        side-drag := DragArea {
                             data: picked ? TrackDrag.side-payload(tab, first-picked, last-picked) : TrackDrag.side-payload(tab, i, i);
                             allow-copy: true;
                             changed dragging => {
@@ -6062,6 +6072,7 @@ component SidePanel inherits Rectangle {
                                 pointer-event(e) => {
                                     if e.button == PointerEventButton.left && e.kind == PointerEventKind.down {
                                         shift-held = e.modifiers.shift;
+                                        TrackDrag.cross-start(side-drag.data);
                                     }
                                     if e.button == PointerEventButton.right && e.kind == PointerEventKind.down {
                                         if !picked { pick(i); }

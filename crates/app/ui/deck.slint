@@ -2323,7 +2323,7 @@ component PadTabs inherits Rectangle {
             min-width: 0px;
             preferred-width: 0px;
             background: i == selected ? Theme.panel-raised : Theme.well;
-            Text { text: names[slots[i]]; color: i == selected ? Theme.text : Theme.text-dim; font-size: 10px; font-weight: 600; overflow: elide; }
+            Text { x: 2px; width: parent.width - 4px; horizontal-alignment: center; text: names[slots[i]]; color: i == selected ? Theme.text : Theme.text-dim; font-size: 10px; font-weight: 600; overflow: elide; }
             TouchArea {
                 pointer-event(e) => {
                     if e.kind != PointerEventKind.down {
@@ -3213,7 +3213,8 @@ component JogSection inherits VerticalLayout {
     in property <color> tint;
     in property <angle> spin;
     spacing: 8px;
-    width: 132px;
+    in property <length> diameter: 132px;
+    width: diameter;
     Rectangle {
         vertical-stretch: 1;
         Jog {
@@ -5980,7 +5981,11 @@ export component LiveStrip inherits Rectangle {
 }
 
 export component Deck inherits Rectangle {
+    // Only the active layout accepts cross-window drops.
+    in property <bool> cross-enabled;
     in property <int> deck;
+    in property <bool> performance;
+    property <length> jog-size: performance ? clamp(root.width - 440px, 132px, 160px) : 132px;
     in property <DeckInfo> info;
     in property <image> overview;
     in property <bool> mirrored: false;
@@ -6008,7 +6013,13 @@ export component Deck inherits Rectangle {
     // Files dragged in from Finder or a file manager (see TrackDrag.files-over).
     property <bool> under-files: TrackDrag.files-x >= self.absolute-position.x && TrackDrag.files-x < self.absolute-position.x + self.width
         && TrackDrag.files-y >= self.absolute-position.y && TrackDrag.files-y < self.absolute-position.y + self.height;
-    property <bool> files-here: TrackDrag.files-over && under-files;
+    property <bool> under-cross: cross-enabled && TrackDrag.cross-x >= self.absolute-position.x && TrackDrag.cross-x < self.absolute-position.x + self.width
+        && TrackDrag.cross-y >= self.absolute-position.y && TrackDrag.cross-y < self.absolute-position.y + self.height;
+    property <bool> files-here: (TrackDrag.files-over && under-files) || (TrackDrag.cross-over && under-cross);
+    property <int> cross-dropped: TrackDrag.cross-dropped;
+    changed cross-dropped => {
+        if under-cross { TrackDrag.drop(deck, TrackDrag.cross-data); }
+    }
     property <int> files-dropped: TrackDrag.files-dropped;
     changed files-dropped => {
         if under-files && live > 0 {
@@ -6053,7 +6064,7 @@ export component Deck inherits Rectangle {
             if !groove && !looper && live == 0: HorizontalLayout {
                 padding: 8px;
                 spacing: 0px;
-                if mirrored: JogSection { group: group; info: info; tint: tint; spin: spin; mirrored: true; }
+                if mirrored: JogSection { diameter: root.jog-size; group: group; info: info; tint: tint; spin: spin; mirrored: true; }
                 if mirrored: Rectangle { width: 10px; }
                 if mirrored: LoopSection { group: group; info: info; tint: tint; mirrored: true; }
                 if mirrored: VDivider { }
@@ -6065,7 +6076,7 @@ export component Deck inherits Rectangle {
                 if !mirrored: VDivider { }
                 if !mirrored: LoopSection { group: group; info: info; tint: tint; }
                 if !mirrored: Rectangle { width: 10px; }
-                if !mirrored: JogSection { group: group; info: info; tint: tint; spin: spin; }
+                if !mirrored: JogSection { diameter: root.jog-size; group: group; info: info; tint: tint; spin: spin; }
                 if mirrored: Rectangle { width: 12px; }
                 if mirrored: Pitch { group: group; info: info; tint: tint; mirrored: true; }
             }
@@ -6083,7 +6094,7 @@ export component Deck inherits Rectangle {
     }
 
     // Drop target for tracks dragged from the browser. While any drag is in
-    if TrackDrag.active || InstrumentsUi.dragging || TrackDrag.files-over || drop.has-drag: Rectangle {
+    if TrackDrag.active || InstrumentsUi.dragging || TrackDrag.files-over || TrackDrag.cross-over || drop.has-drag: Rectangle {
         border-radius: Theme.radius + 2px;
         border-width: drop.has-drag || files-here ? 3px : 2px;
         border-color: drop.has-drag || files-here ? tint : tint.transparentize(0.55);

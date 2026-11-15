@@ -221,3 +221,45 @@ for the right side. The number of each deck the controller plays is lit.
 Switching to another layout moves both sides back to decks 1 and 2.
 
 Automix always mixes between decks 1 and 2.
+
+## Library on another screen
+
+Click **Unpin Library** beside the expand button in the footer to open the
+music library in its own resizable window. The main window keeps its size.
+Drag its title bar to another
+screen. Browsing, editing and loading tracks continue to use the same library
+and decks. Use a track's load action or double-click it to load a free deck;
+you can also drag a track from the detached library onto a main-window deck
+on macOS, Windows and X11. Cross-window track dragging is not yet available
+on Wayland.
+
+Click **Pin Library** in either window, or close the library window, to put it
+back below the decks. The library starts pinned when you launch openDJ.
+
+### Detached performance layout
+
+With the library unpinned, **2-Deck**, **4-Deck**, **Prep** and **2-Deck Basic**
+use the freed space for taller waveforms, deck controls, pads and faders.
+The main window stays at its current size. Waveform height choices are kept
+separately for docked and detached use in each layout; the height menu,
+waveform grip and controller shortcuts still work.
+
+The **Performance** strip below the decks offers **Decks only**, **Sampler**,
+**Instruments**, **Effects** and **Lyrics**. Prep also offers **Checklist**,
+which opens by default. Each layout remembers its selected tool while the app
+runs. Choose **Decks only** to give the most room to the decks and waveforms.
+Pinning the library restores the docked layout and its waveform proportions.
+Player keeps its existing presentation.
+
+Drag the separator above the library or an open Performance tool to resize the
+bottom area. A numbered indicator shows its size from **1** to **10**, like
+the waveform grip. Double-click the separator to restore size **3**. Each
+layout keeps separate sizes for docked and detached use. **Decks only** keeps
+just the tool chooser; choose a tool to open and resize its content.
+With the library pinned, growing the waveforms takes room from the library.
+Prep's **Checklist** scrolls when its rows and controls need more room than
+the bottom pane provides.
+
+The Performance **Effects** view groups each deck's three slots into cards.
+Each card has an effect chooser, a clear **ON/OFF** switch, beat-length or
+parameter controls, and a labeled **Dry / Wet** knob with its percentage.

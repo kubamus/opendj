@@ -25,9 +25,9 @@ use crate::{settings, AppWindow, WaveHeight};
 pub const LEVELS: i32 = 10;
 /// The height the waveforms had before they could change.
 pub const DEFAULT_LEVEL: i32 = 3;
-/// Layout numbers 0 to 4 (main.slint's `layout`); Player (1) has no large
-/// waveforms but keeps its place in the list.
-const LAYOUTS: usize = 5;
+/// Layout numbers 0 to 4 are docked; 5 to 9 are their detached profiles.
+/// Player has no large waveforms but keeps its place in each half.
+const LAYOUTS: usize = 10;
 const SETTING: &str = "waveform_height_steps";
 /// The first version's four sizes (Small, Medium, Large, Extra large), and
 /// the steps they became.
@@ -205,6 +205,13 @@ mod tests {
     use super::*;
 
     #[test]
+    fn detached_profiles_are_independent() {
+        let levels = parse(&serde_json::json!([2, 3, 4, 5, 6, 9, 3, 8, 7, 10]));
+        assert_eq!(&levels[..5], &[2, 3, 4, 5, 6]);
+        assert_eq!(&levels[5..], &[9, 3, 8, 7, 10]);
+    }
+
+    #[test]
     fn nothing_saved_is_medium_everywhere() {
         assert_eq!(parse(&Value::Null), [DEFAULT_LEVEL; LAYOUTS]);
     }
@@ -212,19 +219,22 @@ mod tests {
     #[test]
     fn saved_steps_come_back_by_layout() {
         let saved = serde_json::json!([10, 3, 1, 7, 5]);
-        assert_eq!(parse(&saved), [10, 3, 1, 7, 5]);
+        assert_eq!(parse(&saved), [10, 3, 1, 7, 5, 3, 3, 3, 3, 3]);
     }
 
     #[test]
     fn odd_saved_values_are_kept_in_range() {
         let saved = serde_json::json!([19, -1, "big", 2.6]);
-        assert_eq!(parse(&saved), [10, 1, DEFAULT_LEVEL, 3, DEFAULT_LEVEL]);
+        assert_eq!(
+            parse(&saved),
+            [10, 1, DEFAULT_LEVEL, 3, DEFAULT_LEVEL, 3, 3, 3, 3, 3]
+        );
     }
 
     #[test]
     fn the_four_sizes_move_to_their_steps() {
         let settings = serde_json::json!({ "waveform_height": [4, 2, 1, 3, 2] });
-        assert_eq!(saved(&settings), [10, 3, 1, 6, 3]);
+        assert_eq!(saved(&settings), [10, 3, 1, 6, 3, 3, 3, 3, 3, 3]);
     }
 
     #[test]
@@ -233,6 +243,6 @@ mod tests {
             "waveform_height": [4, 4, 4, 4, 4],
             "waveform_height_steps": [8, 3, 3, 3, 3],
         });
-        assert_eq!(saved(&settings), [8, 3, 3, 3, 3]);
+        assert_eq!(saved(&settings), [8, 3, 3, 3, 3, 3, 3, 3, 3, 3]);
     }
 }

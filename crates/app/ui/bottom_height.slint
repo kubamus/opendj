@@ -1,0 +1,84 @@
+import { Theme } from "theme.slint";
+
+export global BottomHeight {
+    in property <[int]> levels: [3, 3, 3, 3, 3, 3, 3, 3, 3, 3];
+    in-out property <int> profile;
+    out property <int> level: levels[profile];
+    in property <int> changes;
+    callback set-level(profile: int, level: int);
+    public function pick(level: int) { set-level(profile, clamp(level, 1, 10)); }
+}
+
+export component BottomHeightGrip inherits Rectangle {
+    in property <length> panel-top;
+    in property <length> panel-height;
+    in property <[length]> heights;
+    out property <bool> dragging;
+    out property <length> drag-height;
+    property <length> start-height;
+    property <length> press-y;
+    property <bool> stretched;
+    property <bool> flash;
+    property <int> changes: BottomHeight.changes;
+    changed changes => { flash = true; hide.restart(); }
+    hide := Timer { interval: 900ms; triggered => { flash = false; self.running = false; } }
+    pure function nearest(h: length) -> int {
+        let a = abs(heights[0] - h) <= abs(heights[1] - h) ? 1 : 2;
+        let b = abs(heights[a - 1] - h) <= abs(heights[2] - h) ? a : 3;
+        let c = abs(heights[b - 1] - h) <= abs(heights[3] - h) ? b : 4;
+        let d = abs(heights[c - 1] - h) <= abs(heights[4] - h) ? c : 5;
+        let e = abs(heights[d - 1] - h) <= abs(heights[5] - h) ? d : 6;
+        let f = abs(heights[e - 1] - h) <= abs(heights[6] - h) ? e : 7;
+        let g = abs(heights[f - 1] - h) <= abs(heights[7] - h) ? f : 8;
+        let j = abs(heights[g - 1] - h) <= abs(heights[8] - h) ? g : 9;
+        abs(heights[j - 1] - h) <= abs(heights[9] - h) ? j : 10
+    }
+    Rectangle {
+        x: (root.width - self.width) / 2;
+        y: panel-top - 3px;
+        width: 40px;
+        height: 5px;
+        border-radius: 3px;
+        background: Theme.accent;
+        opacity: grip.has-hover || dragging ? 1 : 0;
+    }
+    Rectangle {
+        x: (root.width - self.width) / 2;
+        y: panel-top + 14px;
+        width: 36px;
+        height: 26px;
+        border-radius: 13px;
+        background: Theme.s-000000c0;
+        border-width: 1px;
+        border-color: dragging ? Theme.accent : Theme.border;
+        visible: dragging || flash;
+        Text { text: dragging ? root.nearest(drag-height) : BottomHeight.level; color: Theme.text; font-size: 14px; horizontal-alignment: center; vertical-alignment: center; }
+    }
+    grip := TouchArea {
+        y: panel-top - 4px;
+        width: root.width;
+        height: 8px;
+        mouse-cursor: row-resize;
+        pointer-event(e) => {
+            if e.button != PointerEventButton.left && e.kind != PointerEventKind.cancel { return; }
+            if e.kind == PointerEventKind.down {
+                start-height = panel-height;
+                press-y = self.y + self.mouse-y;
+                drag-height = panel-height;
+                stretched = false;
+                dragging = true;
+            } else if e.kind == PointerEventKind.up && dragging {
+                let size = root.nearest(drag-height);
+                dragging = false;
+                if stretched { BottomHeight.pick(size); }
+            } else if e.kind == PointerEventKind.cancel { dragging = false; }
+        }
+        moved => {
+            if self.pressed && dragging {
+                drag-height = clamp(start-height + press-y - (self.y + self.mouse-y), heights[0], heights[9]);
+                stretched = true;
+            }
+        }
+        double-clicked => { BottomHeight.pick(3); }
+    }
+}

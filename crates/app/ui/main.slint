@@ -25,6 +25,9 @@ import { LyricsUi, WaveLyrics, LyricsLane, WaveLine } from "lyrics.slint";
 import { NowPlayingUi } from "nowplaying.slint";
 import { DeckStrip, FourDeckBar } from "fourdeck.slint";
 import { LiteDeck, LiteMixer, LiteUi, PadBarHalf } from "lite.slint";
+import { BottomHeight, BottomHeightGrip } from "bottom_height.slint";
+export { BottomHeight }
+import { PerformancePanel } from "performance.slint";
 import { FxBar } from "fxbar.slint";
 import { InstrumentsUi, LiveItem, ParamMatch, PresetItem, PresetUi } from "instruments.slint";
 import { Browser, Folder, TrackRow, SideRow, SideTab, SideTabs, RailOrder, DragGrip, TrackDrag, LibraryEdit, KeepGoingUi, UpNextUi, MenuListRow, MenuTag, StoreUi, StreamMatch, WantedUi, FilesUi, AlbumsUi, AlbumTile, ColumnUi, ListColumn, HealthUi, HealthCard, HealthStage, HealthLine, HealthArea, HealthChip, HealthReview, CleanupUi, CleanupRow, FixNamesUi, GenreRow, BuyUi, BuyGroup, BuyRow } from "library.slint";
@@ -541,8 +544,8 @@ component FooterButton inherits Rectangle {
     height: 26px;
     border-radius: 5px;
     background: ta.pressed ? Theme.control-pressed : ta.has-hover ? Theme.n-2a2a2e : transparent;
-    if !lit: Path { width: 18px; height: 18px; viewbox-width: 20; viewbox-height: 20; stroke: ink; stroke-width: 1.5px; fill: transparent; commands: icon; }
-    if lit: Path { width: 18px; height: 18px; viewbox-width: 20; viewbox-height: 20; stroke: ink; stroke-width: 1.5px; fill: transparent; commands: lit-icon; }
+    if !lit: Path { x: (parent.width - self.width) / 2; y: (parent.height - self.height) / 2; width: 18px; height: 18px; viewbox-width: 20; viewbox-height: 20; stroke: ink; stroke-width: 1.5px; fill: transparent; commands: icon; }
+    if lit: Path { x: (parent.width - self.width) / 2; y: (parent.height - self.height) / 2; width: 18px; height: 18px; viewbox-width: 20; viewbox-height: 20; stroke: ink; stroke-width: 1.5px; fill: transparent; commands: lit-icon; }
     ta := TouchArea {
         clicked => { root.clicked(); }
         changed has-hover => {
@@ -1431,6 +1434,9 @@ export component AppWindow inherits Window {
     preferred-height: 1050px;
     min-width: 1280px;
     min-height: 800px;
+    // Detached panels size themselves from the viewport without constraining it.
+    max-width: 100000px;
+    max-height: 100000px;
     background: Theme.n-000000;
     default-font-family: Theme.font-family;
 
@@ -1473,15 +1479,62 @@ export component AppWindow inherits Window {
     in property <bool> sort-ascending: true;
     in-out property <int> current-track <=> browser.current-row;
     // The track list's scroll, kept per list while openDJ runs.
-    out property <length> track-scroll-y: browser.list-scroll-y;
+    out property <length> track-scroll-y: library-detached ? detached-scroll-y : browser.list-scroll-y;
+    in property <length> detached-scroll-y;
+    callback show-detached-tracks-at(row: int, offset: length, y: length);
+    callback find-detached();
     public function show-tracks-at(row: int, offset: length, y: length) {
-        browser.show-list-at(row, offset, y);
+        if library-detached { show-detached-tracks-at(row, offset, y); }
+        else { browser.show-list-at(row, offset, y); }
     }
     in property <[SideRow]> side-rows;
     in property <string> side-total;
     in-out property <int> side-tab <=> browser.side-tab;
     // Footer toggles: the library over the decks, and the side panel.
     in-out property <bool> library-expanded: false;
+    in property <bool> library-detached;
+    out property <bool> performance: library-detached && !player;
+    property <bool> browser-expanded: library-expanded && !performance;
+    // Tool choice stays with each layout for this session.
+    property <[int]> performance-tools: [0, 0, 0, 5, 0];
+    property <int> performance-tool: performance-tools[layout];
+    out property <bool> performance-lyrics-visible: performance && performance-tool == 4;
+    property <length> performance-min-wave: four && performance ? 101px : strip-heights[0];
+    property <length> four-row: PadsUi.visible ? 330px : 247px;
+    property <int> bottom-profile: layout + (library-detached ? 5 : 0);
+    changed bottom-profile => { BottomHeight.profile = bottom-profile; }
+    property <length> bottom-max: max(33px, LibraryEdit.window-height - other-rows - ((waveforms-visible || prep) && !browser-expanded ? performance-min-wave : 0px));
+    property <length> bottom-min: min(performance ? 100px : 120px, bottom-max);
+    property <length> bottom-base: performance ? clamp(LibraryEdit.window-height * 0.23, bottom-min, bottom-max) : clamp(LibraryEdit.window-height - other-rows - ((waveforms-visible || prep) && !browser-expanded ? strip-heights[clamp(WaveHeight.level, 1, 10) - 1] : 0px), bottom-min, bottom-max);
+    pure function bottom-size(level: int) -> length {
+        level <= 3 ? bottom-min + (bottom-base - bottom-min) * (level - 1) / 2 : bottom-base + (bottom-max - bottom-base) * (level - 3) / 7
+    }
+    property <[length]> bottom-heights: [bottom-size(1), bottom-size(2), bottom-size(3), bottom-size(4), bottom-size(5), bottom-size(6), bottom-size(7), bottom-size(8), bottom-size(9), bottom-size(10)];
+    // Growing a waveform may borrow room from the library during the drag.
+    // On release bottom-base follows the newly chosen waveform step.
+    property <length> wave-preview: wave-grip.dragging ? wave-grip.drag-height
+        : strip-heights[slide-low - 1] + (strip-heights[min(slide-low, 9)] - strip-heights[slide-low - 1]) * (slide-at - slide-low);
+    property <length> bottom-height: bottom-grip.dragging ? bottom-grip.drag-height
+        : !performance && !browser-expanded && (wave-grip.dragging || WaveHeight.sliding)
+        ? min(bottom-heights[BottomHeight.level - 1], max(bottom-min, LibraryEdit.window-height - other-rows - wave-preview))
+        : bottom-heights[BottomHeight.level - 1];
+    property <length> tool-height: !performance ? 0px : performance-tool == 0 ? 33px : bottom-height;
+    property <length> performance-room: max(0px, LibraryEdit.window-height - other-rows + deck-rows - (performance ? tool-height : bottom-height));
+    property <length> wave-base: min(strip-heights[wave-level - 1], max(performance-min-wave, performance-room - deck-rows));
+    property <length> performance-extra: max(0px, performance-room - deck-rows - ((waveforms-visible || prep) ? wave-base : 0px));
+    property <length> performance-waves: wave-base + performance-extra * 0.4;
+    property <length> wave-height: wave-grip.dragging ? wave-grip.drag-height : WaveHeight.sliding ? slide-height : performance ? performance-waves : min(strip-heights[wave-level - 1], max(performance-min-wave, performance-room - deck-rows));
+    property <length> deck-extra: !player && !browser-expanded ? max(0px, performance-room - deck-rows - ((waveforms-visible || prep) ? wave-height : 0px)) : 0px;
+    pure function wave-size(level: int) -> length {
+        if !performance { return strip-heights[level - 1]; }
+        let base = min(strip-heights[level - 1], max(performance-min-wave, performance-room - deck-rows));
+        base + max(0px, performance-room - deck-rows - base) * 0.4
+    }
+    property <[length]> shown-heights: [wave-size(1), wave-size(2), wave-size(3), wave-size(4), wave-size(5), wave-size(6), wave-size(7), wave-size(8), wave-size(9), wave-size(10)];
+    property <int> wave-profile: layout + (performance ? 5 : 0);
+    changed wave-profile => { WaveHeight.layout = wave-profile; }
+
+    callback detach-library();
     in-out property <bool> side-panel-visible: true;
     in property <bool> automix-on;
     in property <string> automix-status;
@@ -1531,25 +1584,22 @@ export component AppWindow inherits Window {
     // Everything else down the window but the library, which is as tall as
     // this layout makes it whatever the waveforms' height: the top bar, the
     // decks, the FX bar and the footer, with the lines between.
-    property <length> deck-rows: layout == 0 ? LiteUi.deck-height + 1px + LiteUi.bar-height
+    property <length> deck-rows: browser-expanded ? 108px : layout == 0 ? LiteUi.deck-height + 1px + LiteUi.bar-height
         : lite ? lite-row + (PadsUi.visible ? 1px + LiteUi.bar-height : 0px)
-        : four ? (PadsUi.visible ? 330px : 247px) + 1px + 48px
+        : four ? four-row + 1px + 48px
         : prep ? 280px : 0px;
-    property <length> other-rows: 52px + 1px + 1px + deck-rows + 1px + (fx-bar-visible && !prep ? (four ? 96px : 68px) + 1px : 0px) + 1px + 36px;
-    // The library keeps room for about five tracks under its header: a
-    // step with less shows the highest one that fits, but never below 3
-    // unless the DJ chose less. The chosen one comes back
-    // when the window has room again.
-    property <length> library-floor: 230px;
+    property <length> other-rows: 52px + 1px + 1px + deck-rows + 1px + (!browser-expanded && fx-bar-visible && !prep ? (four ? 96px : 68px) + 1px : 0px) + 1px + 36px;
+    // The waveform grip can borrow library space down to its minimum. Using
+    // the current library height here would cap the grip at its current step.
     // The window's height as `changed height` passes it on: reading
     // root.height here would tie the window's own size to the waveforms'.
-    property <length> strip-room: LibraryEdit.window-height - other-rows - library-floor;
-    property <int> wave-fits: strip-heights[9] <= strip-room ? 10 : strip-heights[8] <= strip-room ? 9 : strip-heights[7] <= strip-room ? 8 : strip-heights[6] <= strip-room ? 7 : strip-heights[5] <= strip-room ? 6 : strip-heights[4] <= strip-room ? 5 : strip-heights[3] <= strip-room ? 4 : strip-heights[2] <= strip-room ? 3 : strip-heights[1] <= strip-room ? 2 : 1;
+    property <length> strip-room: LibraryEdit.window-height - other-rows - bottom-min;
+    property <int> wave-fits: performance ? 10 : strip-heights[9] <= strip-room ? 10 : strip-heights[8] <= strip-room ? 9 : strip-heights[7] <= strip-room ? 8 : strip-heights[6] <= strip-room ? 7 : strip-heights[5] <= strip-room ? 6 : strip-heights[4] <= strip-room ? 5 : strip-heights[3] <= strip-room ? 4 : strip-heights[2] <= strip-room ? 3 : strip-heights[1] <= strip-room ? 2 : 1;
     // While the drop-down's slider is dragged: the strip's height between
     // the two steps either side of it, up to the highest that fits.
     property <float> slide-at: clamp(WaveHeight.slide, 1, max(wave-fits, 1));
     property <int> slide-low: floor(slide-at);
-    property <length> slide-height: strip-heights[slide-low - 1] + (strip-heights[min(slide-low, 9)] - strip-heights[slide-low - 1]) * (slide-at - slide-low);
+    property <length> slide-height: shown-heights[slide-low - 1] + (shown-heights[min(slide-low, 9)] - shown-heights[slide-low - 1]) * (slide-at - slide-low);
     property <int> wave-level: min(WaveHeight.level, max(wave-fits, min(WaveHeight.level, WaveHeight.default-level)));
     // From whichever layout's deck A is showing.
     // 2-Deck measures the overviews on deck 1, or on deck 2 while deck 1
@@ -1560,11 +1610,11 @@ export component AppWindow inherits Window {
     property <length> pro-overview-height: pro-overview-b ? deck-b.overview-height : deck-a.overview-height;
     out property <length> overview-width: player ? 1px : four ? strip-1.overview-width : compact ? player-a.overview-width : prep ? prep-deck.overview-width : lite ? lite-a.overview-width : pro-overview-width;
     out property <length> overview-height: player ? 1px : four ? strip-1.overview-height : compact ? player-a.overview-height : prep ? prep-deck.overview-height : lite ? lite-a.overview-height : pro-overview-height;
-    property <bool> four: layout == 2 && !library-expanded;
+    property <bool> four: layout == 2 && !browser-expanded;
     // 2-Deck Basic, the lighter two-deck layout (lite.slint). A deck there holding
     // a Groove Box or an instrument shows the full deck, and the row is as
     // tall as 2-Deck's.
-    property <bool> lite: layout == 4 && !library-expanded;
+    property <bool> lite: layout == 4 && !browser-expanded;
     property <bool> lite-full-a: Controls.value(Controls.resolve("[Groove1]", "enabled"), Controls.tick) > 0 || (!decks[0].loaded && InstrumentsUi.live(0) > 0);
     // The 2-Deck Basic deck row: the full deck's height when one holds a Groove
     // Box or an instrument.
@@ -1573,13 +1623,13 @@ export component AppWindow inherits Window {
     // A hardware mixer does the mixing (`[Master],external_mixer`): no
     // on-screen mixer, only each deck's level.
     property <bool> external-mixer: Controls.value(Controls.resolve("[Master]", "external_mixer"), Controls.tick) > 0;
-    property <bool> prep: layout == 3 && !library-expanded;
+    property <bool> prep: layout == 3 && !browser-expanded;
     // The Player layout: one bar, no waveforms or FX bar.
     property <bool> player: layout == 1;
     property <bool> recording: Controls.value(Controls.resolve("[Recording]", "status"), Controls.tick) > 1;
     // The compact row shows in 2-Deck Basic, 4-Deck and Prep while the footer
     // button has the library expanded (then with no waveforms).
-    property <bool> compact: library-expanded && !player;
+    property <bool> compact: browser-expanded && !player;
 
     callback select-source(source: int);
     // Which sources the library rail shows, by index.
@@ -1627,7 +1677,8 @@ export component AppWindow inherits Window {
     // Edit › Find, and ⌘F (Ctrl+F on Linux and Windows): the library
     // search, or the top bar's in Player.
     public function find() {
-        if player {
+        if library-detached { find-detached(); }
+        else if player {
             QuickSearch.focus-box();
         } else {
             focus-search();
@@ -1643,14 +1694,15 @@ export component AppWindow inherits Window {
     init => {
         Palette.color-scheme = Theme.light ? ColorScheme.light : ColorScheme.dark;
         Theme.player = player;
-        WaveHeight.layout = layout;
+        WaveHeight.layout = wave-profile;
+        BottomHeight.profile = bottom-profile;
         keys.focus();
         LibraryEdit.window-height = root.height;
         LibraryEdit.window-width = root.width;
         LibraryEdit.top-search = player;
     }
     changed layout => {
-        WaveHeight.layout = layout;
+        WaveHeight.layout = wave-profile;
     }
     changed player => {
         Theme.player = player;
@@ -1691,7 +1743,7 @@ export component AppWindow inherits Window {
     property <bool> playing-3: Controls.value(play-index[2], Controls.tick) > 0;
     property <bool> playing-4: Controls.value(play-index[3], Controls.tick) > 0;
     property <[bool]> playing: [playing-1, playing-2, playing-3, playing-4];
-    property <int> master-deck: 0;
+    in-out property <int> master-deck: 0;
     // The deck started last, the one being mixed in: ← and → bend it.
     property <int> last-started: 0;
     // The bend control an arrow key holds down, -1 for none.
@@ -1982,6 +2034,11 @@ export component AppWindow inherits Window {
                     // File and Edit, on Windows and Linux (macOS has its
                     // menu bar).
                     if AppMenu.shown: AppMenuButton { }
+                    if player: FooterButton {
+                        tip: library-detached ? "Pin Library" : "Unpin Library";
+                        icon: "M 2 7 L 2 18 L 14 18 L 14 12 M 8 2 L 18 2 L 18 12 M 18 2 L 7 13";
+                        clicked => { detach-library(); }
+                    }
                     LayoutPill { layout <=> root.layout; changed-to(l) => { layout-changed(l); } }
                     // Prep always shows its waveform and never the FX bar,
                     // so neither button is offered there.
@@ -2026,8 +2083,8 @@ export component AppWindow inherits Window {
                 // would freeze the GPU-updated waveform images. Folded away while
                 // the library is expanded or the top bar button hides them
                 // (Prep has no such button: its waveform always shows).
-                height: library-expanded || !(waveforms-visible || prep) || player ? 0px : wave-grip.dragging ? wave-grip.drag-height : WaveHeight.sliding ? slide-height : strip-heights[wave-level - 1];
-                visible: !library-expanded && (waveforms-visible || prep) && !player;
+                height: browser-expanded || !(waveforms-visible || prep) || player ? 0px : wave-height;
+                visible: !browser-expanded && (waveforms-visible || prep) && !player;
                 background: Theme.well;
                 // Thin grey lines above, between and below the waveforms.
                 if prep: VerticalLayout {
@@ -2107,15 +2164,15 @@ export component AppWindow inherits Window {
                     spacing: 1px;
                     // As tall as 2-Deck Basic with its pad bar, so switching between
                     // them leaves the library where it is.
-                    height: library-expanded || layout != 0 ? 0px : LiteUi.deck-height + 1px + LiteUi.bar-height;
-                    visible: !library-expanded && layout == 0;
+                    height: browser-expanded || layout != 0 ? 0px : LiteUi.deck-height + 1px + LiteUi.bar-height + deck-extra;
+                    visible: !browser-expanded && layout == 0;
                     // The decks share the room equally whatever they show: sized by
                     // their contents, a changing time or title would nudge the
                     // mixer sideways every frame.
-                    deck-a := Deck { deck: 0; info: decks[0]; spin: spin-1; overview: overview-1; horizontal-stretch: 1; min-width: 400px; preferred-width: 400px; }
-                    if !external-mixer: Mixer { }
+                    deck-a := Deck { cross-enabled: layout == 0 && !browser-expanded; performance: root.performance; deck: 0; info: decks[0]; spin: spin-1; overview: overview-1; horizontal-stretch: 1; min-width: 400px; preferred-width: 400px; }
+                    if !external-mixer: Mixer { performance: root.performance; }
                     if external-mixer: ExternalMixer { }
-                    deck-b := Deck { deck: 1; info: decks[1]; spin: spin-2; overview: overview-2; mirrored: true; horizontal-stretch: 1; min-width: 400px; preferred-width: 400px; }
+                    deck-b := Deck { cross-enabled: layout == 0 && !browser-expanded; performance: root.performance; deck: 1; info: decks[1]; spin: spin-2; overview: overview-2; mirrored: true; horizontal-stretch: 1; min-width: 400px; preferred-width: 400px; }
                 }
 
                 // 2-Deck Basic: the lighter decks either side of the slim mixer, each
@@ -2125,7 +2182,7 @@ export component AppWindow inherits Window {
                 // and then the deck row and mixer are 2-Deck's.
                 HorizontalLayout {
                     spacing: 1px;
-                    height: lite ? lite-row + (PadsUi.visible ? 1px + LiteUi.bar-height : 0px) : 0px;
+                    height: lite ? lite-row + deck-extra + (PadsUi.visible ? 1px + LiteUi.bar-height : 0px) : 0px;
                     visible: lite;
                     VerticalLayout {
                         spacing: 1px;
@@ -2133,22 +2190,22 @@ export component AppWindow inherits Window {
                         min-width: 400px;
                         preferred-width: 400px;
                         Rectangle {
-                            height: lite-row;
-                            lite-a := LiteDeck { width: parent.width; height: parent.height; visible: !lite-full-a; deck: 0; info: decks[0]; overview: overview-1; spin: spin-1; }
-                            if lite-full-a: Deck { width: parent.width; height: parent.height; deck: 0; info: decks[0]; spin: spin-1; overview: overview-1; }
+                            height: lite-row + deck-extra;
+                            lite-a := LiteDeck { cross-enabled: lite && !lite-full-a; width: parent.width; height: parent.height; visible: !lite-full-a; deck: 0; info: decks[0]; overview: overview-1; spin: spin-1; }
+                            if lite-full-a: Deck { cross-enabled: lite && lite-full-a; performance: root.performance; width: parent.width; height: parent.height; deck: 0; info: decks[0]; spin: spin-1; overview: overview-1; }
                         }
                         if PadsUi.visible: PadBarHalf { height: LiteUi.bar-height; deck: 0; info: decks[0]; }
                     }
                     // With the pad bar the row is 2-Deck Pro's height, so it
                     // takes the same full mixer: GAIN knobs, cues under the faders.
                     if !external-mixer && !(lite-full-a || lite-full-b) && !PadsUi.visible: LiteMixer { }
-                    if !external-mixer && !(lite-full-a || lite-full-b) && PadsUi.visible: Mixer { }
+                    if !external-mixer && !(lite-full-a || lite-full-b) && PadsUi.visible: Mixer { performance: root.performance; }
                     if !external-mixer && (lite-full-a || lite-full-b): VerticalLayout {
-                        Mixer { height: 272px; }
+                        Mixer { performance: root.performance; height: 272px + deck-extra; }
                         Rectangle { background: Theme.panel; vertical-stretch: 1; }
                     }
                     if external-mixer: VerticalLayout {
-                        ExternalMixer { height: lite-row; }
+                        ExternalMixer { height: lite-row + deck-extra; }
                         Rectangle { background: Theme.panel; vertical-stretch: 1; }
                     }
                     VerticalLayout {
@@ -2157,9 +2214,9 @@ export component AppWindow inherits Window {
                         min-width: 400px;
                         preferred-width: 400px;
                         Rectangle {
-                            height: lite-row;
-                            LiteDeck { width: parent.width; height: parent.height; visible: !lite-full-b; deck: 1; info: decks[1]; overview: overview-2; mirrored: true; spin: spin-2; }
-                            if lite-full-b: Deck { width: parent.width; height: parent.height; deck: 1; info: decks[1]; spin: spin-2; overview: overview-2; mirrored: true; }
+                            height: lite-row + deck-extra;
+                            LiteDeck { cross-enabled: lite && !lite-full-b; width: parent.width; height: parent.height; visible: !lite-full-b; deck: 1; info: decks[1]; overview: overview-2; mirrored: true; spin: spin-2; }
+                            if lite-full-b: Deck { cross-enabled: lite && lite-full-b; performance: root.performance; width: parent.width; height: parent.height; deck: 1; info: decks[1]; spin: spin-2; overview: overview-2; mirrored: true; }
                         }
                         if PadsUi.visible: PadBarHalf { height: LiteUi.bar-height; deck: 1; info: decks[1]; mirrored: true; }
                     }
@@ -2170,12 +2227,12 @@ export component AppWindow inherits Window {
                 // layouts.
                 HorizontalLayout {
                     spacing: 1px;
-                    height: four ? (PadsUi.visible ? 330px : 247px) : 0px;
+                    height: four ? four-row + deck-extra : 0px;
                     visible: four;
-                    DeckStrip { deck: 2; info: decks[2]; overview: overview-3; horizontal-stretch: 1; min-width: 270px; preferred-width: 270px; }
-                    strip-1 := DeckStrip { deck: 0; info: decks[0]; overview: overview-1; horizontal-stretch: 1; min-width: 270px; preferred-width: 270px; }
-                    DeckStrip { deck: 1; info: decks[1]; overview: overview-2; horizontal-stretch: 1; min-width: 270px; preferred-width: 270px; }
-                    DeckStrip { deck: 3; info: decks[3]; overview: overview-4; horizontal-stretch: 1; min-width: 270px; preferred-width: 270px; }
+                    DeckStrip { cross-enabled: four; performance: root.performance; deck: 2; info: decks[2]; overview: overview-3; horizontal-stretch: 1; min-width: 270px; preferred-width: 270px; }
+                    strip-1 := DeckStrip { cross-enabled: four; performance: root.performance; deck: 0; info: decks[0]; overview: overview-1; horizontal-stretch: 1; min-width: 270px; preferred-width: 270px; }
+                    DeckStrip { cross-enabled: four; performance: root.performance; deck: 1; info: decks[1]; overview: overview-2; horizontal-stretch: 1; min-width: 270px; preferred-width: 270px; }
+                    DeckStrip { cross-enabled: four; performance: root.performance; deck: 3; info: decks[3]; overview: overview-4; horizontal-stretch: 1; min-width: 270px; preferred-width: 270px; }
                 }
 
                 // Over the expanded library: the deck headers either side of
@@ -2184,17 +2241,17 @@ export component AppWindow inherits Window {
                     spacing: 1px;
                     height: compact ? 108px : 0px;
                     visible: compact;
-                    player-a := PlayerDeck { deck: 0; info: decks[0]; overview: overview-1; horizontal-stretch: 1; min-width: 330px; }
+                    player-a := PlayerDeck { cross-enabled: compact; deck: 0; info: decks[0]; overview: overview-1; horizontal-stretch: 1; min-width: 330px; }
                     PlayerMixer { decks: decks; spin-1: spin-1; spin-2: spin-2; }
-                    PlayerDeck { deck: 1; info: decks[1]; overview: overview-2; mirrored: true; horizontal-stretch: 1; min-width: 330px; }
+                    PlayerDeck { cross-enabled: compact; deck: 1; info: decks[1]; overview: overview-2; mirrored: true; horizontal-stretch: 1; min-width: 330px; }
                 }
 
                 // Prep: deck 1's header over the grid tools, transport and hot
                 // cue pads.
-                prep-deck := PrepDeck {
+                prep-deck := PrepDeck { cross-enabled: prep; performance: root.performance;
                     info: decks[0];
                     overview: overview-1;
-                    height: prep ? 280px : 0px;
+                    height: prep ? 280px + deck-extra : 0px;
                     visible: prep;
                 }
 
@@ -2213,14 +2270,17 @@ export component AppWindow inherits Window {
             // bar hides it.
             FxBar {
                 four: four;
-                height: library-expanded || !fx-bar-visible || player || prep ? 0px : four ? 96px : 68px;
-                visible: !library-expanded && fx-bar-visible && !player && !prep;
+                height: browser-expanded || !fx-bar-visible || player || prep ? 0px : four ? 96px : 68px;
+                visible: !browser-expanded && fx-bar-visible && !player && !prep;
             }
 
-            Rectangle { height: !library-expanded && fx-bar-visible && !player && !prep ? 1px : 0px; }
+            Rectangle { height: !browser-expanded && fx-bar-visible && !player && !prep ? 1px : 0px; }
 
             browser := Browser {
-                vertical-stretch: 1;
+                vertical-stretch: player ? 1 : 0;
+                visible: !library-detached;
+                min-height: library-detached || player ? 0px : browser-expanded ? bottom-max : bottom-height;
+                max-height: library-detached ? 0px : player ? 100000px : browser-expanded ? bottom-max : bottom-height;
                 folders: folders;
                 current-folder: current-folder;
                 folders-focused <=> folders-focused;
@@ -2269,6 +2329,16 @@ export component AppWindow inherits Window {
                 now-playing: player && NowPlayingUi.open;
             }
 
+            performance-panel := PerformancePanel {
+                visible: performance;
+                min-height: tool-height;
+                max-height: tool-height;
+                selected: performance ? performance-tool : 0;
+                four: four;
+                prep: prep;
+                picked(tool) => { performance-tools[layout] = tool; }
+            }
+
             // Footer: on the left, expand the library, leaving just the
             // Player row above it; on the right, show or hide the side panel.
             // Player has its bar instead, so only while analysis runs.
@@ -2280,17 +2350,25 @@ export component AppWindow inherits Window {
                 HorizontalLayout {
                     padding-left: 8px;
                     padding-right: 8px;
-                    alignment: space-between;
+                    padding-top: 5px;
+                    padding-bottom: 5px;
+                    spacing: 4px;
                     FooterButton {
-                        y: 5px;
-                        lit: library-expanded;
-                        tip: library-expanded ? "Shrink Browser" : "Expand Browser";
+                        lit: browser-expanded;
+                        tip: browser-expanded ? "Shrink Browser" : "Expand Browser";
                         tip-body: "Also from a controller or key: expand_browser";
                         // A screen with an arrow pointing up, or down to fold back.
                         icon: "M 2 4 L 18 4 L 18 16 L 2 16 Z M 10 13 L 10 7 M 7 10 L 10 7 L 13 10";
                         lit-icon: "M 2 4 L 18 4 L 18 16 L 2 16 Z M 10 7 L 10 13 M 7 10 L 10 13 L 13 10";
-                        clicked => { library-expanded = !library-expanded; }
+                        clicked => { if library-detached { detach-library(); library-expanded = true; } else { library-expanded = !library-expanded; } }
                     }
+                    FooterButton {
+                        lit: library-detached;
+                        tip: library-detached ? "Pin Library" : "Unpin Library";
+                        icon: "M 2 7 L 2 18 L 14 18 L 14 12 M 8 2 L 18 2 L 18 12 M 18 2 L 7 13";
+                        clicked => { detach-library(); }
+                    }
+                    Rectangle { horizontal-stretch: 1; }
                     // How background analysis is going, with a ✕ that stops it.
                     if LibraryEdit.analysis-status != "": HorizontalLayout {
                         spacing: 6px;
@@ -2307,7 +2385,6 @@ export component AppWindow inherits Window {
                         }
                     }
                     FooterButton {
-                        y: 5px;
                         lit: side-panel-visible;
                         // A list.
                         icon: "M 6 5 L 18 5 M 6 10 L 18 10 M 6 15 L 18 15 M 2 5 L 3 5 M 2 10 L 3 10 M 2 15 L 3 15";
@@ -2345,6 +2422,15 @@ export component AppWindow inherits Window {
             }
         }
 
+        bottom-grip := BottomHeightGrip {
+            visible: !player && !browser-expanded && (!performance || performance-tool != 0);
+            width: parent.width;
+            height: parent.height;
+            panel-top: (performance ? performance-panel.absolute-position.y : browser.absolute-position.y) - keys.absolute-position.y;
+            panel-height: performance ? performance-panel.height : browser.height;
+            heights: bottom-heights;
+        }
+
         // The grip on the line under the waveforms, to make them taller
         // or shorter; over everything, so it can be grabbed from just
         // below the line too. While dragging, the waveforms take its height.
@@ -2356,7 +2442,7 @@ export component AppWindow inherits Window {
             height: parent.height;
             strip-top: waveforms.absolute-position.y - keys.absolute-position.y;
             strip-height: waveforms.height;
-            heights: strip-heights;
+            heights: shown-heights;
             fits: wave-fits;
             shown: wave-level;
         }
@@ -2489,6 +2575,158 @@ export component AppWindow inherits Window {
         if UsbExport.open: UsbExportDialog {
             width: root.width;
             height: root.height;
+        }
+    }
+}
+
+
+// Native library window; both views use the same backend through library_window.rs.
+export component LibraryWindow inherits Window {
+    title: "openDJ — Music Library";
+    icon: @image-url("icons/opendj.svg");
+    preferred-width: 1280px;
+    preferred-height: 800px;
+    min-width: 800px;
+    min-height: 400px;
+    background: Theme.panel;
+    default-font-family: Theme.font-family;
+
+    in property <int> master-deck;
+    property <bool> light-look: Theme.light;
+    changed light-look => { Palette.color-scheme = light-look ? ColorScheme.light : ColorScheme.dark; }
+    init => {
+        LibraryEdit.window-width = self.width;
+        LibraryEdit.window-height = self.height;
+        Palette.color-scheme = Theme.light ? ColorScheme.light : ColorScheme.dark;
+    }
+    changed width => { LibraryEdit.window-width = self.width; }
+    changed height => { LibraryEdit.window-height = self.height; }
+    in-out property <bool> folders-focused;
+    in property <[Folder]> folders;
+    in property <int> current-folder;
+    in property <string> folder-name;
+    in property <string> folder-duration;
+    in property <bool> spotify-connected;
+    in property <string> spotify-user;
+    in property <string> spotify-status;
+    in-out property <string> spotify-client-id;
+    in property <string> list-notice;
+    in property <[TrackRow]> tracks;
+    in property <int> sort-column;
+    in property <bool> sort-ascending;
+    in-out property <int> current-track <=> browser.current-row;
+    in-out property <int> side-tab <=> browser.side-tab;
+    in property <[SideRow]> side-rows;
+    in property <string> side-total;
+    in-out property <bool> side-panel-visible;
+    in property <bool> automix-on;
+    in property <string> automix-status;
+    in property <int> automix-length;
+    in property <int> automix-style;
+    in property <bool> automix-repeat;
+    in-out property <string> automix-order-note;
+    in-out property <[bool]> sources-shown;
+    callback pin-library();
+    callback spotify-disconnect();
+    callback spotify-copy();
+    callback spotify-refresh();
+    callback automix-toggle();
+    callback automix-mix-now();
+    callback automix-skip();
+    callback automix-order-undo();
+    callback shortcut(text: string, cmd: bool, alt: bool, shift: bool, master: int, first: int, last: int) -> bool;
+    out property <length> track-scroll-y: browser.list-scroll-y;
+    public function show-tracks-at(row: int, offset: length, y: length) { browser.show-list-at(row, offset, y); }
+    public function find() { browser.focus-search(); }
+
+    callback activate-track(row: int);
+    callback automix-order(int);
+    callback automix-set-length(index: int);
+    callback automix-set-repeat(bool);
+    callback automix-set-style(index: int);
+    callback search(text: string);
+    callback select-folder(index: int);
+    callback select-source(source: int);
+    callback side-activate(row: int);
+    callback side-remove(first: int, last: int);
+    callback sort(column: int);
+    callback source-shown-changed(source: int, on: bool);
+    callback spotify-connect(client-id: string);
+    callback toggle-folder(index: int);
+
+    keys := FocusScope {
+        key-pressed(e) => {
+            if e.modifiers.control && (e.text == "f" || e.text == "F") { browser.focus-search(); return accept; }
+            if e.modifiers.control && (e.text == "a" || e.text == "A") { browser.select-all(); return accept; }
+            if shortcut(e.text, e.modifiers.control, e.modifiers.alt, e.modifiers.shift, master-deck, browser.first-picked, browser.last-picked) { return accept; }
+            reject
+        }
+
+        VerticalLayout {
+            browser := Browser {
+                vertical-stretch: 1;
+                folders: folders;
+                current-folder: current-folder;
+                folders-focused <=> folders-focused;
+                folder-name: folder-name;
+                folder-duration: folder-duration;
+                spotify-connected: spotify-connected;
+                spotify-user: spotify-user;
+                spotify-status: spotify-status;
+                spotify-client-id <=> spotify-client-id;
+                list-notice: list-notice;
+                select-source(s) => { select-source(s); }
+                sources-shown <=> sources-shown;
+                source-shown-changed(s, on) => { source-shown-changed(s, on); }
+                spotify-connect(id) => { spotify-connect(id); }
+                spotify-disconnect => { spotify-disconnect(); }
+                spotify-copy => { spotify-copy(); }
+                spotify-refresh => { spotify-refresh(); }
+                rows: tracks;
+                sort-column: sort-column;
+                ascending: sort-ascending;
+                side-rows: side-rows;
+                side-total: side-total;
+                list-clicked => { keys.focus(); }
+                select-folder(i) => { select-folder(i); }
+                toggle-folder(i) => { toggle-folder(i); }
+                sort(c) => { sort(c); }
+                search(t) => { search(t); }
+                activate(r) => { activate-track(r); }
+                side-activate(r) => { side-activate(r); }
+                side-remove(first, last) => { side-remove(first, last); }
+                automix-on: automix-on;
+                automix-status: automix-status;
+                automix-length: automix-length;
+                automix-style: automix-style;
+                automix-toggle => { automix-toggle(); }
+                automix-mix-now => { automix-mix-now(); }
+                automix-skip => { automix-skip(); }
+                automix-order(i) => { automix-order(i); }
+                automix-order-undo => { automix-order-undo(); }
+                automix-order-note <=> automix-order-note;
+                automix-set-length(i) => { automix-set-length(i); }
+                automix-set-style(i) => { automix-set-style(i); }
+                automix-repeat: automix-repeat;
+                automix-set-repeat(on) => { automix-set-repeat(on); }
+                side-visible: side-panel-visible;
+                now-playing: false;
+            }
+            Rectangle {
+                height: 36px;
+                HorizontalLayout {
+                    padding-left: 8px;
+                    padding-right: 8px;
+                    padding-top: 5px;
+                    padding-bottom: 5px;
+                    alignment: start;
+                    FooterButton {
+                        tip: "Pin Library";
+                        icon: "M 2 7 L 2 18 L 14 18 L 14 12 M 8 2 L 18 2 L 18 12 M 18 2 L 7 13";
+                        clicked => { pin-library(); }
+                    }
+                }
+            }
         }
     }
 }

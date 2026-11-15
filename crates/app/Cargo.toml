@@ -77,6 +77,8 @@ windows-sys = { version = "0.61", features = ["Win32_Foundation", "Win32_Graphic
 
 [build-dependencies]
 slint-build = "~1.18"
+syn = { version = "2", features = ["full"] }
+quote = "1"
 
 [target.'cfg(windows)'.build-dependencies]
 # Puts the icon and version into openDJ.exe, for Explorer and the taskbar.

@@ -584,16 +584,18 @@ component Channel inherits VerticalLayout {
 // The four knobs down one side, spread over the mixer's height.
 component SideColumn inherits VerticalLayout {
     in property <int> deck;
-    width: 48px;
+    in property <length> control-size: 27px;
+    width: control-size + 21px;
     alignment: space-around;
-    for place in 4: SideKnob { deck: deck; place: place; }
+    for place in 4: SideKnob { deck: deck; place: place; size: control-size; }
 }
 
 // The channels: four knobs down the outsides (EQ, stems or
 // sculpt; see MixerMode), and between them gain, the channel faders with
 // the meters between them, and headphone cue.
 component ChannelGrid inherits HorizontalLayout {
-    SideColumn { deck: 0; }
+    in property <bool> performance;
+    SideColumn { control-size: performance ? 36px : 27px; deck: 0; }
     HorizontalLayout {
         horizontal-stretch: 1;
         // Faders close in on the meters; what room is left goes on the
@@ -617,7 +619,7 @@ component ChannelGrid inherits HorizontalLayout {
         }
         Channel { group: "[Channel2]"; tint: Theme.deck2; }
     }
-    SideColumn { deck: 1; }
+    SideColumn { control-size: performance ? 36px : 27px; deck: 1; }
 }
 
 // Where Mixer goes while a hardware mixer does the mixing
@@ -662,11 +664,12 @@ export component ExternalMixer inherits Rectangle {
 export component Mixer inherits Rectangle {
     background: Theme.panel;
     // The Beat FX under it in the FX bar matches this width.
+    in property <bool> performance;
     width: 254px;
     VerticalLayout {
         padding: 8px;
         spacing: 4px;
-        ChannelGrid { vertical-stretch: 1; }
+        ChannelGrid { performance: root.performance; vertical-stretch: 1; }
         // Along the bottom edge, as on a hardware mixer: the crossfader.
         // The levels are in the top bar's MASTER panel.
         HorizontalLayout {

@@ -43,7 +43,8 @@ component Box inherits Rectangle {
 export component ChecklistPanel inherits Rectangle {
     property <int> done: ChecklistUi.done;
     background: Theme.browser;
-    VerticalLayout {
+    preferred-height: content.preferred-height;
+    content := VerticalLayout {
         padding: 8px;
         spacing: 6px;
         HorizontalLayout {

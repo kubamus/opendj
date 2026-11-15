@@ -4436,7 +4436,14 @@ impl Browser {
     pub fn set_loaded(&mut self, app: &AppWindow, loaded: [Option<usize>; NUM_DECKS]) {
         let shown = app.get_side_tab().max(0) as usize;
         self.poll_info(app, shown);
-        self.poll_lyrics(app, shown);
+        self.poll_lyrics(
+            app,
+            if app.get_performance_lyrics_visible() {
+                lyrics::LYRICS_TAB
+            } else {
+                shown
+            },
+        );
         self.poll_wave_lyrics(app);
         let tab = shown.min(info::INFO_TAB);
         // The Linked tab follows the track selected in the list.

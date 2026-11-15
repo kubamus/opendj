@@ -8,9 +8,10 @@ import { Theme } from "theme.slint";
 import { WaveLook } from "wave_look.slint";
 
 export global WaveHeight {
+    // Detached profiles use layout number + 5.
     // Each layout's step, by layout number (0 2-Deck, 1 Player,
     // 2 4-Deck, 3 Prep, 4 2-Deck Basic): 1 to `steps`.
-    in property <[int]> levels: [3, 3, 3, 3, 3];
+    in property <[int]> levels: [3, 3, 3, 3, 3, 3, 3, 3, 3, 3];
     in property <int> steps: 10;
     in property <int> default-level: 3;
     // The layout showing, kept up to date by the window.

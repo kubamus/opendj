@@ -219,13 +219,6 @@ impl Browser {
             crate::settings::set(PAGE, serde_json::json!(on));
             w(&|b| b.serve_page(on))
         });
-        // Closing openDJ closes the karaoke screen too, or the app would run
-        // on behind it.
-        let w = with.clone();
-        app.window().on_close_requested(move || {
-            w(&|b| b.set_karaoke(false));
-            CloseRequestResponse::HideWindow
-        });
     }
 
     fn set_karaoke(&mut self, on: bool) {

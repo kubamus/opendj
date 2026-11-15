@@ -387,7 +387,7 @@ component FxCell inherits Rectangle {
 }
 
 // 4-Deck: a deck's three effects stacked, one line each.
-component FxStack inherits Rectangle {
+export component FxStack inherits Rectangle {
     in property <int> deck;
     background: Theme.panel;
     horizontal-stretch: 1;
@@ -489,5 +489,70 @@ export component FxBar inherits Rectangle {
         BeatFxSection { }
         FxStack { deck: 1; }
         FxStack { deck: 3; }
+    }
+}
+
+// The performance workspace uses bounded cards rather than full-width strips.
+export component PerformanceEffect inherits Rectangle {
+    in property <int> unit;
+    in property <int> slot;
+    in property <color> tint;
+    property <string> fx: "[EffectRack1_EffectUnit" + (unit + 1) + "_Effect" + (slot + 1) + "]";
+    property <int> loaded: Controls.value(Controls.resolve(fx, "loaded_effect"), Controls.tick);
+    property <bool> has-effect: loaded > 0 && loaded <= EffectList.names.length;
+    property <bool> on: Controls.value(Controls.resolve(fx, "enabled"), Controls.tick) > 0;
+    property <float> beats: Controls.value(Controls.resolve(fx, "beats"), Controls.tick);
+    property <int> param: !has-effect ? -1 : loaded > EffectList.builtin-count ? 0 : loaded <= EffectList.slider-params.length ? EffectList.slider-params[loaded - 1] : -1;
+    property <int> mix-index: Controls.resolve(fx, "meta");
+    property <float> mix: Controls.parameter(mix-index, Controls.tick);
+    height: 132px;
+    horizontal-stretch: 1;
+    min-width: 0px;
+    preferred-width: 0px;
+    background: Theme.panel-raised;
+    border-radius: 8px;
+    border-width: 1px;
+    border-color: on && has-effect ? tint.with-alpha(0.6) : Theme.border;
+    VerticalLayout {
+        padding: 10px;
+        spacing: 10px;
+        HorizontalLayout {
+            height: 28px;
+            spacing: 6px;
+            Text { text: slot + 1; width: 16px; color: Theme.text-dim; font-size: 11px; vertical-alignment: center; }
+            EffectPicker { fx: fx; tint: tint; font-size: 14px; centred: false; horizontal-stretch: 1; min-width: 0px; }
+            Rectangle {
+                width: 44px;
+                border-radius: 5px;
+                background: on && has-effect ? tint : Theme.control;
+                Text { text: on && has-effect ? "ON" : "OFF"; color: on && has-effect ? #ffffff : Theme.text-dim; font-size: 11px; font-weight: 600; horizontal-alignment: center; vertical-alignment: center; }
+                TouchArea { mouse-cursor: pointer; clicked => { if has-effect { Controls.toggle(Controls.resolve(fx, "enabled")); } } }
+                MapMark { key: root.fx + ",enabled"; }
+            }
+        }
+        HorizontalLayout {
+            spacing: 12px;
+            height: 64px;
+            VerticalLayout {
+                horizontal-stretch: 1;
+                spacing: 4px;
+                Text { text: beats > 0 ? "BEAT LENGTH" : param >= 0 ? "PARAMETER" : "BLEND"; color: Theme.text-dim; font-size: 10px; height: 12px; }
+                if beats > 0: BeatChooser { index: Controls.resolve(fx, "beats"); height: 30px; }
+                if beats <= 0 && param >= 0: ParamSlider { index: Controls.resolve(fx, "parameter" + (param + 1)); height: 30px; }
+                if beats <= 0 && param < 0: Text { text: has-effect ? "Original ↔ effect" : "Choose an effect"; color: Theme.text-dim; font-size: 11px; wrap: word-wrap; }
+                if loaded > EffectList.builtin-count: ControlButton { group: fx; key: "show_editor"; text: "EDIT"; height: 22px; font-size: 10px; tint: tint; }
+            }
+            VerticalLayout {
+                width: 64px;
+                spacing: 2px;
+                Text { text: "DRY / WET"; color: Theme.text-dim; font-size: 10px; height: 12px; horizontal-alignment: center; }
+                Rectangle {
+                    height: 34px;
+                    DwKnob { x: (parent.width - self.width) / 2; width: 34px; height: 34px; index: mix-index; tint: tint; }
+                    MapMark { key: root.fx + ",meta"; }
+                }
+                Text { text: round(max(0, mix) * 100) + "%"; color: Theme.text; font-size: 11px; height: 14px; horizontal-alignment: center; }
+            }
+        }
     }
 }

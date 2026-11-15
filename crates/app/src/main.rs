@@ -46,11 +46,13 @@ mod automix_order;
 mod automix_phrases;
 mod backup;
 mod beat_counter;
+mod bottom_height;
 mod broadcast;
 mod browser;
 mod controller_editor;
 mod cover_scan;
 mod coverart;
+mod cross_window_drag;
 mod diagnostics;
 mod file_drop;
 mod files;
@@ -63,6 +65,7 @@ mod instruments;
 mod keep_going;
 mod lastfm;
 mod layouts;
+mod library_window;
 mod list_picker;
 mod live_trace;
 mod lookup;
@@ -555,6 +558,20 @@ fn fit_to_screen(app: &AppWindow) {
     });
 }
 
+// A window has one close handler. Keep auxiliary-window cleanup together so
+// installing a new window cannot replace another window's shutdown work.
+fn install_window_close(app: &AppWindow) {
+    let close_library = library_window::install(app);
+    let weak = app.as_weak();
+    app.window().on_close_requested(move || {
+        close_library();
+        if let Some(app) = weak.upgrade() {
+            app.global::<LyricsUi>().invoke_set_karaoke(false);
+        }
+        slint::CloseRequestResponse::HideWindow
+    });
+}
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     if std::env::args().nth(1).as_deref() == Some("--list-controls") {
         list_controls();
@@ -585,6 +602,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     #[cfg(target_os = "macos")]
     let backend = backend.with_winit_window_attributes_hook(|attributes| {
         use slint::winit_030::winit::platform::macos::WindowAttributesExtMacOS;
+        if library_window::creating() {
+            return attributes;
+        }
         attributes
             .with_titlebar_transparent(true)
             .with_title_hidden(true)
@@ -1763,6 +1783,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         timer
     };
 
+    bottom_height::install(&app);
+    install_window_close(&app);
     app.show()?;
     fit_to_screen(&app);
     app.run()?;
