@@ -241,7 +241,6 @@ PioneerDDJ400.beatFxSelectPressed = function(_channel, _control, value) {
 
     engine.setValue(PioneerDDJ400.beatFxSlot, "next_effect", 1);
     engine.setValue(PioneerDDJ400.beatFxSlot, "next_effect", 0);
-    PioneerDDJ400.showBeatFxSelector();
 };
 
 PioneerDDJ400.beatFxSelectShiftPressed = function(_channel, _control, value) {
@@ -249,12 +248,6 @@ PioneerDDJ400.beatFxSelectShiftPressed = function(_channel, _control, value) {
 
     engine.setValue(PioneerDDJ400.beatFxSlot, "prev_effect", 1);
     engine.setValue(PioneerDDJ400.beatFxSlot, "prev_effect", 0);
-    PioneerDDJ400.showBeatFxSelector();
-};
-
-PioneerDDJ400.showBeatFxSelector = function() {
-    const request = engine.getValue(PioneerDDJ400.beatFxSlot, "show_selector");
-    engine.setValue(PioneerDDJ400.beatFxSlot, "show_selector", request % 1000000 + 1);
 };
 
 // Halves (-1) or doubles (+1) the effect's length, 1/16 to 4 beats; effects
@@ -294,16 +287,12 @@ PioneerDDJ400.beatFxRightPressed = function(_channel, _control, value) {
 PioneerDDJ400.beatFxOnOffPressed = function(_channel, _control, value) {
     if (value === 0) { return; }
 
-    engine.setValue(PioneerDDJ400.beatFxSlot, "show_selector", 0);
-
     const toggleEnabled = !engine.getValue(PioneerDDJ400.beatFxSlot, "enabled");
     engine.setValue(PioneerDDJ400.beatFxSlot, "enabled", toggleEnabled);
 };
 
 PioneerDDJ400.beatFxOnOffShiftPressed = function(_channel, _control, value) {
     if (value === 0) { return; }
-
-    engine.setValue(PioneerDDJ400.beatFxSlot, "show_selector", 0);
 
     PioneerDDJ400.pushBeatFxUnit("release");
 };

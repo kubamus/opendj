@@ -84,28 +84,22 @@ fn ddj_400_beat_fx() {
     assert_eq!(get(&reg, slot, "meta"), 1.0);
     // Each press must select another effect, including after an engine tick.
     assert_eq!(get(&reg, slot, "loaded_effect"), 1.0);
-    for expected in [9.0, 18.0] {
-        let request = get(&reg, slot, "show_selector");
+    for expected in [2.0, 3.0] {
         c.receive(&[0x94, 0x63, 0x7f]);
         c.receive(&[0x94, 0x63, 0x00]);
-        assert!(get(&reg, slot, "show_selector") > request);
         engine.process(&mut [0.0; 128], 2);
         assert_eq!(get(&reg, slot, "loaded_effect"), expected);
     }
     c.receive(&[0x94, 0x64, 0x7f]);
     c.receive(&[0x94, 0x64, 0x00]);
     engine.process(&mut [0.0; 128], 2);
-    assert_eq!(get(&reg, slot, "loaded_effect"), 9.0);
-    assert!(get(&reg, slot, "show_selector") > 0.0);
+    assert_eq!(get(&reg, slot, "loaded_effect"), 2.0);
     c.receive(&[0x94, 0x47, 0x7f]);
     c.receive(&[0x94, 0x47, 0x00]);
-    assert_eq!(get(&reg, slot, "show_selector"), 0.0);
     c.receive(&[0x94, 0x63, 0x7f]);
     c.receive(&[0x94, 0x63, 0x00]);
-    assert!(get(&reg, slot, "show_selector") > 0.0);
     c.receive(&[0x94, 0x43, 0x7f]);
     c.receive(&[0x94, 0x43, 0x00]);
-    assert_eq!(get(&reg, slot, "show_selector"), 0.0);
     reg.get(slot, "beats").unwrap().set(0.5);
     c.receive(&[0x94, 0x4a, 0x7f]);
     c.receive(&[0x94, 0x4a, 0x00]);

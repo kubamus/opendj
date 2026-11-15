@@ -21,8 +21,7 @@ FX in the middle, under the mixer.
 Each effect has:
 
 - **Its name.** Click it for the list of effects, or step through them with
-  the arrows either side. Stepping follows the list’s category and name order;
-  the list scrolls to keep the selected effect in view.
+  the arrows either side.
 - **ON** to switch it on and off.
 - **Its length in beats**, with ◀ and ▶ to halve and double it. Effects
   that have no length show a slider instead, for their main setting:
@@ -74,10 +73,7 @@ DDJ-FLX4 the BEAT FX section of the controller plays it.
 
 The controller’s **BEAT FX** section controls the Beat FX under the mixer:
 
-- **FX SELECT** steps through the effects in the list’s order; hold **SHIFT**
-  to step backwards. The list opens with the selected effect highlighted,
-  follows it as you step, and closes after three seconds without another
-  press, or when you press **ON/OFF**.
+- **FX SELECT** steps through the effects; hold **SHIFT** to step backwards.
 - **LEVEL/DEPTH** adjusts the effect’s depth. As with other controller
   knobs, move through the on-screen value to pick it up.
 - **BEAT ◀ / ▶** halve or double the effect’s beat length.

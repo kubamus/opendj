@@ -48,35 +48,6 @@ pub const AVAILABLE_EFFECTS: [&str; 18] = [
     "Filter Echo",
 ];
 
-/// Built-in effect IDs in the chooser's category and alphabetical order.
-/// IDs remain stable for saved settings and controller mappings.
-pub const EFFECT_MENU_ORDER: [usize; 18] = [
-    1, 9, 18, 12, 16, 17, 2, 3, 15, 14, 4, 6, 5, 13, 11, 10, 7, 8,
-];
-
-fn step_effect(current: usize, step: i32, plugins: usize) -> usize {
-    let n = EFFECT_MENU_ORDER.len() + plugins;
-    let position = EFFECT_MENU_ORDER
-        .iter()
-        .position(|&id| id == current)
-        .or_else(|| (current > EFFECT_MENU_ORDER.len() && current <= n).then(|| current - 1));
-    let next = match position {
-        Some(position) => (position as i32 + step).rem_euclid(n as i32) as usize,
-        None => {
-            if step > 0 {
-                0
-            } else {
-                n - 1
-            }
-        }
-    };
-    if next < EFFECT_MENU_ORDER.len() {
-        EFFECT_MENU_ORDER[next]
-    } else {
-        next + 1
-    }
-}
-
 /// Parameter knobs (`parameterK`) and buttons (`button_parameterK`) per slot.
 pub const MAX_PARAMETERS: usize = 4;
 pub const MAX_BUTTON_PARAMETERS: usize = 2;
@@ -527,9 +498,6 @@ impl SlotControls {
         let g = effect_group(unit, slot);
         let g = g.as_str();
         let n = (KINDS.len() + MAX_PLUGINS) as f64;
-        // Controller request for the effect menu: zero closes it, a new
-        // positive value opens it and renews the UI's inactivity timeout.
-        reg.create(g, "show_selector", 0.0, 0.0, 1_000_000.0, Behavior::Free);
         for k in 1..=MAX_BUTTON_PARAMETERS {
             reg.toggle(g, &format!("button_parameter{k}"));
         }
@@ -610,9 +578,18 @@ impl SlotControls {
             // Cycles through the effects, then the plugins; an empty slot
             // steps to either end.
             let plugins = (self.num_plugins.get().round() as usize).min(MAX_PLUGINS);
-            let cur = self.loaded_effect.get().round() as usize;
-            self.loaded_effect
-                .set(step_effect(cur, step, plugins) as f64);
+            let n = (KINDS.len() + plugins) as i32;
+            let cur = self.loaded_effect.get().round() as i32;
+            let next = if cur == 0 {
+                if step > 0 {
+                    1
+                } else {
+                    n
+                }
+            } else {
+                (cur - 1 + step).rem_euclid(n) + 1
+            };
+            self.loaded_effect.set(next as f64);
         }
 
         let kind = Kind::from_loaded(self.loaded_effect.get());
@@ -3314,27 +3291,6 @@ mod bench;
 
 #[cfg(test)]
 mod tests {
-    #[test]
-    fn selector_follows_menu_order_and_wraps() {
-        for plugins in [0, 3] {
-            let order: Vec<_> = super::EFFECT_MENU_ORDER
-                .into_iter()
-                .chain(19..19 + plugins)
-                .collect();
-            assert_eq!(super::step_effect(0, 1, plugins), order[0]);
-            assert_eq!(super::step_effect(0, -1, plugins), *order.last().unwrap());
-            for (i, &id) in order.iter().enumerate() {
-                assert_eq!(
-                    super::step_effect(id, 1, plugins),
-                    order[(i + 1) % order.len()]
-                );
-                assert_eq!(
-                    super::step_effect(id, -1, plugins),
-                    order[(i + order.len() - 1) % order.len()]
-                );
-            }
-        }
-    }
     use super::*;
 
     #[test]
